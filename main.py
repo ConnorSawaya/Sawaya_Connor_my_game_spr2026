@@ -1,5 +1,5 @@
 # game engine using template from Chris Bradfield's "Making Games with Python & Pygame"
-# I can push from vscode
+
 '''
 '''
 
@@ -11,7 +11,9 @@ from sprites import *
 from utils import *
 vec = pg.math.Vector2
 
+
 # import settings
+
 
 
 # the game class that will be instantiated in order to run the game...
@@ -35,21 +37,23 @@ class Game:
         self.map = Map(path.join(self.game_dir, 'level1.txt'))
         print('data is loaded')
 
-def new(self):
-    self.load_data()
-    self.all_sprites = pg.sprite.Group()
-    self.all_walls = pg.sprite.Group()
-    self.all_mobs = pg.sprite.Group()
-    # self.player = Player(self, 15, 15)
-    # self.mob = Mob(self, 4, 4) 
-    #  self.wall = Wall(self, WIDTH/2/TILESIZE, HEIGHT/2/TILESIZE)
-    for row, tiles in enumerate(self.map.data):
-        for col, tile, in enumerate(tiles):
-            if tile == '1':
-                # call class constructor without assigning variable...when
-                Wall(self, col, row)
-            if tile == 'P':
-                self.player = Player(self, col, row)
+    def new(self):
+        self.load_data()
+        self.all_sprites = pg.sprite.Group()
+        self.all_walls = pg.sprite.Group()
+        self.all_mobs = pg.sprite.Group()
+        #self.player = Player(self, 15, 15)
+        #self.mob = Mob(self, 4, 4) 
+        #self.wall = Wall(self, WIDTH/2/TILESIZE, HEIGHT/2/TILESIZE)
+        for row, tiles in enumerate(self.map.data):
+            for col, tile, in enumerate(tiles):
+                if tile == '1':
+                    # call class constructor without assigning variable...when
+                    Wall(self, col, row)
+                if tile == 'P':
+                    self.player = Player(self, col, row)
+                if tile == 'M':
+                    Mob(self, col, row)
         self.run()
    
 
@@ -59,6 +63,7 @@ def new(self):
             self.events()
             self.update()
             self.draw()
+            
 
     def events(self):
         for event in pg.event.get():
@@ -74,6 +79,7 @@ def new(self):
 
     def update(self):
         self.all_sprites.update() # Updates all sprites 
+
         
         
 

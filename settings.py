@@ -1,12 +1,15 @@
+import pygame as pg
+
 WIDTH = 800
 HEIGHT = 600
 TITLE = "My cool game..."
 FPS = 60
 TILESIZE = 32
-BORDER_THICKNESS = 5
+BORDER_THICKNESS = 2
 
 PLAYER_SPEED = 280 # Player Speed for moving
 
+PLAYER_HIT_RECT = pg.Rect(0, 0, TILESIZE, TILESIZE)  # Player Hitbox 
 
 # Color Values
 
