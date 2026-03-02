@@ -92,6 +92,10 @@ class Player(Sprite):
                 self.image = self.standing_frames[self.current_frame]
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
+        elif self.jumping:
+             #self.image = self.sprite_sheet.get_image ()
+            pass
+           
 
 
     def update(self):
@@ -142,7 +146,8 @@ class Wall(Sprite):
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(GREEN)
+        self.image = pg.image.load(path.join(self.game.img_dir, 'wall.png')).convert()
+
         self.rect = self.image.get_rect()
         
         self.vel = vec(0,0) 
