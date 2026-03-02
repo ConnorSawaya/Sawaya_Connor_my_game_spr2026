@@ -34,7 +34,16 @@ class Game:
 
     def load_data(self):
         self.game_dir = path.dirname(__file__)
-        self.map = Map(path.join(self.game_dir, 'level1.txt'))
+        # project/script directory and image directory
+        self.script_dir = self.game_dir
+        self.img_dir = path.join(self.game_dir, 'images')
+        # load shared spritesheet 
+        try:
+            self.sprite_sheet = Spritesheet(path.join(self.img_dir, 'sprite_sheet.png'))
+        except Exception:
+            # If spritesheet not present, leave attribute so callers can still reference it
+            self.sprite_sheet = None
+        self.map = Map(path.join(self.game_dir, 'level1.txt')) # addes the level maping 
         print('data is loaded')
 
     def new(self):

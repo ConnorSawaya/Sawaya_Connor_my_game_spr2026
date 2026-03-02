@@ -1,3 +1,5 @@
+import os
+
 import pygame as pg
 
 WIDTH = 800
@@ -6,6 +8,9 @@ TITLE = "My cool game..."
 FPS = 60
 TILESIZE = 32
 BORDER_THICKNESS = 2
+
+
+script_dir = os.path.dirname(__file__) 
 
 PLAYER_SPEED = 280 # Player Speed for moving
 

@@ -1,8 +1,11 @@
+from os import path
 from time import time
 import pygame as pg
 from pygame.sprite import Sprite
 from sympy import true
 from settings import *
+from utils import *
+
 
 vec = pg.math.Vector2
 
@@ -42,12 +45,23 @@ class Player(Sprite):
         self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
         self.game = game
+        # use the shared spritesheet loaded by the Game (may be None)
+        self.sprite_sheet = getattr(self.game, 'sprite_sheet', None)
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill(WHITE)
         self.rect = self.image.get_rect()
         self.vel = vec(0,0)
         self.pos = vec(x,y) * TILESIZE
         self.hit_rect =  PLAYER_HIT_RECT
+        self.jumping = False
+        self.walking = False
+        self.last_update = 0
+        self.current_frame = 0
+        # load animation frames if spritesheet is available
+        if self.sprite_sheet:
+            self.load_image()
+        else:
+            self.standing_frames = [self.image]
         
     def get_keys(self):
         self.vel = vec(0,0)
@@ -62,9 +76,27 @@ class Player(Sprite):
             self.vel.y = PLAYER_SPEED
         if self.vel.x != 0 and self.vel.y != 0:
             self.vel *= 0.7071
+    def load_image(self):
+        self.standing_frames = [self.sprite_sheet.get_image(0, 0, TILESIZE, TILESIZE), self.sprite_sheet.get_image(0, TILESIZE, TILESIZE, TILESIZE)]
+    
+        for frame in self.standing_frames:
+            frame.set_colorkey(BLACK)
+    
+    def animate(self):
+        now = pg.time.get_ticks()
+        if not self.jumping and not self.walking:
+            if now - self.last_update > 350:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.standing_frames) 
+                bottom = self.rect.bottom
+                self.image = self.standing_frames[self.current_frame]
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
+
 
     def update(self):
         # print("player updating")
+        self.animate()
         self.get_keys()
         self.rect.center = self.pos
         self.pos += self.vel * self.game.dt
@@ -112,6 +144,7 @@ class Wall(Sprite):
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill(GREEN)
         self.rect = self.image.get_rect()
+        
         self.vel = vec(0,0) 
         self.pos = vec(x,y) * TILESIZE
         self.rect.center = self.pos
@@ -126,6 +159,7 @@ class Coin(Sprite):
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE))
+        
         self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
         self.vel = vec(0,0)
