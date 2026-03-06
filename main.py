@@ -102,12 +102,13 @@ class Game:
 
     
     def draw(self): # draws everything on the screen 
-        self.screen.fill(BLUE) # Screen Fill Blue 
-        # sprites need to be drawn using the camera offset so that the
-        # visible portion of the map follows the player
-        for sprite in self.all_sprites:
-            self.screen.blit(sprite.image, self.camera.apply(sprite))
 
+        self.screen.fill(BLUE) # Screen Fill Blue 
+
+        self.camera.draw_world(self.screen, self.all_sprites) # Updats the circle for the camera
+        if hasattr(self, 'player'):
+            self.camera.apply_circular_mask(self.screen, self.player)
+            
         # hud text should be drawn in screen space, not world space
         self.draw_text("Hello World", 24, WHITE, WIDTH/2, TILESIZE)
         self.draw_text(str(self.dt), 24, WHITE, WIDTH/2, HEIGHT/4)

@@ -8,6 +8,8 @@ TITLE = "My cool game..."
 FPS = 60
 TILESIZE = 32
 BORDER_THICKNESS = 2
+CAMERA_RADIUS = 220
+
 
 
 script_dir = os.path.dirname(__file__) 

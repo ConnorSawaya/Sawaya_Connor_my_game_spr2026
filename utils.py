@@ -39,7 +39,7 @@ class Spritesheet: # Class for loading spritesheets
 
 class Camera: # Camera Class so the camera can follow the player 
     def __init__(self, width, height):
-        self.camera = pg.Rect(0, 0, width, height)
+        self.camera = pg.Rect(0, 0, width, height) 
         # Width and height of the map for camera 
         self.width = width 
         self.height = height
@@ -49,6 +49,17 @@ class Camera: # Camera Class so the camera can follow the player
 
     def apply_rect(self, rect): # Applies camera offest to rec
         return rect.move(self.camera.topleft)
+
+    def draw_world(self, surface, sprites): # Works with camera to draw everything on the world
+        for sprite in sprites: # for each sprite it puts it on the screen with tis 
+            surface.blit(sprite.image, self.apply(sprite))
+
+    def apply_circular_mask(self, surface, target, radius=CAMERA_RADIUS):
+        mask = pg.Surface((WIDTH, HEIGHT), pg.SRCALPHA)
+        mask.fill((0, 0, 0, 255))
+        target_screen_center = self.apply(target).center
+        pg.draw.circle(mask, (0, 0, 0, 0), target_screen_center, radius)
+        surface.blit(mask, (0, 0))
 
     def update(self, target): # Makes camera follow the player
 
@@ -62,7 +73,7 @@ class Camera: # Camera Class so the camera can follow the player
         y = min(0, y)
         y = max(-(self.height - HEIGHT), y)
 
-        self.camera = pg.Rect(x, y, self.width, self.height) # Update camera based on dcord
+        self.camera = pg.Rect(x, y, self.width, self.height) # Update camera based on target
         
 
 
