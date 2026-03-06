@@ -1,6 +1,7 @@
 # game engine using template from Chris Bradfield's "Making Games with Python & Pygame"
 
 '''
+Sprite Sheet llama made  By CaptainBrosset
 '''
 
 import pygame as pg
@@ -44,6 +45,8 @@ class Game:
             # If spritesheet not present, leave attribute so callers can still reference it
             self.sprite_sheet = None
         self.map = Map(path.join(self.game_dir, 'level1.txt')) # addes the level maping 
+        # create a camera that covers the entire level
+        self.camera = Camera(self.map.width, self.map.height)
         print('data is loaded')
 
     def new(self):
@@ -51,6 +54,7 @@ class Game:
         self.all_sprites = pg.sprite.Group()
         self.all_walls = pg.sprite.Group()
         self.all_mobs = pg.sprite.Group()
+        self.all_projectiles = pg.sprite.Group()
         #self.player = Player(self, 15, 15)
         #self.mob = Mob(self, 4, 4) 
         #self.wall = Wall(self, WIDTH/2/TILESIZE, HEIGHT/2/TILESIZE)
@@ -88,6 +92,10 @@ class Game:
 
     def update(self):
         self.all_sprites.update() # Updates all sprites 
+        print(len(self.all_sprites))
+        # keep camera centered on the player once they exist
+        if hasattr(self, 'player'):
+            self.camera.update(self.player)
 
         
         
@@ -95,14 +103,18 @@ class Game:
     
     def draw(self): # draws everything on the screen 
         self.screen.fill(BLUE) # Screen Fill Blue 
+        # sprites need to be drawn using the camera offset so that the
+        # visible portion of the map follows the player
+        for sprite in self.all_sprites:
+            self.screen.blit(sprite.image, self.camera.apply(sprite))
+
+        # hud text should be drawn in screen space, not world space
         self.draw_text("Hello World", 24, WHITE, WIDTH/2, TILESIZE)
         self.draw_text(str(self.dt), 24, WHITE, WIDTH/2, HEIGHT/4)
         # self.draw_text(str(self.game_cooldown.time), 24, WHITE, WIDTH/2, HEIGHT/.5)
         self.draw_text(str(self.game_cooldown.ready()), 24, WHITE, WIDTH/2, HEIGHT/3)
         self.draw_text(str(self.player.pos), 24, WHITE, WIDTH/2, HEIGHT/2)
-        self.all_sprites.draw(self.screen)
 
-       
         pg.display.flip() # Update the full display Surface to the screen
 
     def draw_text(self, text, size, color, x, y):

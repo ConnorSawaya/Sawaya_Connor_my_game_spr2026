@@ -36,6 +36,36 @@ class Spritesheet: # Class for loading spritesheets
     
 
 
+
+class Camera: # Camera Class so the camera can follow the player 
+    def __init__(self, width, height):
+        self.camera = pg.Rect(0, 0, width, height)
+        # Width and height of the map for camera 
+        self.width = width 
+        self.height = height
+
+    def apply(self, entity): # Applies camera offest 
+        return entity.rect.move(self.camera.topleft)
+
+    def apply_rect(self, rect): # Applies camera offest to rec
+        return rect.move(self.camera.topleft)
+
+    def update(self, target): # Makes camera follow the player
+
+        # center camera on target
+        x = -target.rect.centerx + int(WIDTH / 2)
+        y = -target.rect.centery + int(HEIGHT / 2)
+
+        # limit moving to the map size
+        x = min(0, x)
+        x = max(-(self.width - WIDTH), x)
+        y = min(0, y)
+        y = max(-(self.height - HEIGHT), y)
+
+        self.camera = pg.Rect(x, y, self.width, self.height) # Update camera based on dcord
+        
+
+
 class Cooldown:
     def __init__(self, time):
         self.start_time = 0

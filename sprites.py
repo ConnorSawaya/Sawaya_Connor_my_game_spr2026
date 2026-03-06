@@ -54,7 +54,7 @@ class Player(Sprite):
         self.pos = vec(x,y) * TILESIZE
         self.hit_rect =  PLAYER_HIT_RECT
         self.jumping = False
-        self.walking = False
+        self.moving = False
         self.last_update = 0
         self.current_frame = 0
         # load animation frames if spritesheet is available
@@ -62,6 +62,7 @@ class Player(Sprite):
             self.load_image()
         else:
             self.standing_frames = [self.image]
+            self.moving_frames = [self.image]
         
     def get_keys(self):
         self.vel = vec(0,0)
@@ -74,27 +75,51 @@ class Player(Sprite):
             self.vel.y = -PLAYER_SPEED
         if keys[pg.K_s]:
             self.vel.y = PLAYER_SPEED
+        if keys[pg.K_p]:
+            p = Projectile(self.game, self.rect.x, self.rect.y)
         if self.vel.x != 0 and self.vel.y != 0:
             self.vel *= 0.7071
-    def load_image(self):
-        self.standing_frames = [self.sprite_sheet.get_image(0, 0, TILESIZE, TILESIZE), self.sprite_sheet.get_image(0, TILESIZE, TILESIZE, TILESIZE)]
-    
-        for frame in self.standing_frames:
+        self.moving = (self.vel.x != 0 or self.vel.y != 0)
+
+
+    def load_image(self): # Loading frames from spritesheet for animations
+        self.standing_frames = [self.sprite_sheet.get_image(0, 0, TILESIZE, TILESIZE), self.sprite_sheet.get_image(0, TILESIZE, TILESIZE, TILESIZE)] # Graps frames in the first column of the spritesheet for standing animation
+        self.moving_frames = [self.sprite_sheet.get_image(TILESIZE, 0, TILESIZE, TILESIZE), self.sprite_sheet.get_image(TILESIZE, TILESIZE, TILESIZE, TILESIZE)]
+
+        for frame in self.standing_frames: # Sets the color key for transparency to black for each frame
+            frame.set_colorkey(BLACK) # Set to background of spritesheet 
+        for frame in self.moving_frames:
             frame.set_colorkey(BLACK)
-    
+
+
     def animate(self):
         now = pg.time.get_ticks()
-        if not self.jumping and not self.walking:
-            if now - self.last_update > 350:
-                self.last_update = now
-                self.current_frame = (self.current_frame + 1) % len(self.standing_frames) 
+        if not self.jumping and not self.moving:
+            if now - self.last_update > 3500:
+                self.last_update = now # Time in milliseconds since last frame change
+                self.current_frame = (self.current_frame + 1) % len(self.standing_frames) # loops standing frames
+
                 bottom = self.rect.bottom
                 self.image = self.standing_frames[self.current_frame]
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
-        elif self.jumping:
-             #self.image = self.sprite_sheet.get_image ()
-            pass
+        elif self.moving:
+            if now - self.last_update > 350:
+                self.last_update = now
+                self.current_frame = (self.current_frame + 1) % len(self.moving_frames)
+                bottom = self.rect.bottom
+                self.image = self.moving_frames[self.current_frame]
+                self.rect = self.image.get_rect()
+                self.rect.bottom = bottom
+            
+    def state_check(self):
+        if self.vel != vec(0,0):
+            self.moving = True
+        else: 
+            self.moving = False
+
+        
+
            
 
 
@@ -171,4 +196,21 @@ class Coin(Sprite):
         self.pos = vec(x,y) * TILESIZE
     def update(self):
         pass
+class Projectile(Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.all_projectiles
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.vel = vec(1,0)
+        self.pos = vec(x,y) * TILESIZE
+        self.speed = 10
+        print("Working Projectile init")
+    def update(self):
+        hits = pg.sprite.spritecollide(self, self.game.all_walls, true)
+        print("hits")
+        self.pos += self.speed * self.vel
+        self.rect.center = self.pos
  
