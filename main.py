@@ -67,6 +67,8 @@ class Game:
                     self.player = Player(self, col, row)
                 if tile == 'M':
                     Mob(self, col, row)
+                if tile == "W":
+                    moveable_wall(self, col, row)
         self.run()
    
 

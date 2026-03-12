@@ -80,8 +80,8 @@ class Camera: # Camera Class so the camera can follow the player
 class Cooldown:
     def __init__(self, time):
         self.start_time = 0
-        # Allows us to set property for time until cooldown
-        self.time = time
+
+        self.time = time # time in milliseconds for cooldown
     def start(self):
         self.start_time = pg.time.get_ticks()
     def ready(self):

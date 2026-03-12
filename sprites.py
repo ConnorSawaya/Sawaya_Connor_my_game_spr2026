@@ -1,4 +1,5 @@
 from os import path
+from random import random, choice
 from time import time
 import pygame as pg
 from pygame.sprite import Sprite
@@ -165,6 +166,10 @@ class Mob(Sprite):
         self.pos += self.speed * self.vel
         self.rect.center = self.pos
         
+
+
+
+
 class Wall(Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.all_walls
@@ -180,6 +185,41 @@ class Wall(Sprite):
         self.rect.center = self.pos
     def update(self):
         pass
+
+class moveable_wall(Sprite):
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites, game.all_walls
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        self.image = pg.image.load(path.join(self.game.img_dir, 'wall.png')).convert()
+
+        self.rect = self.image.get_rect()
+        
+        self.vel = vec(0,0) 
+        self.pos = vec(x,y) * TILESIZE
+        self.rect.center = self.pos
+    
+
+    def update(self):
+        self.wall_path_mover()
+
+
+    def wall_path_mover(self): # Function to make the walls move outside the players viewing distence to confuse player.
+        # Random movement of walls when player is outside of camera radius
+        # Check distance between player and wall
+        self.pos = vec(self.rect.center)
+
+        if vec(self.pos - self.game.player.pos).length() > CAMERA_RADIUS:
+            # Move wall in random direction later need to be more normal and not just like "randomly teleporting"
+            ''' Needs to only move "changealbe" walls while not touching non changeable walls defined in the level1.txt'''
+            self.pos += vec(choice([-1, 0, 1]), choice([-1, 0, 1])) * TILESIZE
+            self.rect.center = self.pos
+        
+
+
+        
+
 
 
 
