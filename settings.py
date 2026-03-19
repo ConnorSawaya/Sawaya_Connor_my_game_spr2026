@@ -13,6 +13,7 @@ CAMERA_RADIUS = 220
 
 
 
+
 script_dir = os.path.dirname(__file__) 
 
 PLAYER_SPEED = 280 # Player Speed for moving

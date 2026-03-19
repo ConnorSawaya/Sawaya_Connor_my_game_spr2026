@@ -5,7 +5,6 @@ Sprite Sheet llama made  By CaptainBrosset
 '''
 
 import pygame as pg
-import sys
 from os import path
 from settings import *
 from sprites import *
@@ -44,9 +43,10 @@ class Game:
         except Exception:
             # If spritesheet not present, leave attribute so callers can still reference it
             self.sprite_sheet = None
-        self.map = Map(path.join(self.game_dir, 'level1.txt')) # addes the level maping 
-        # create a camera that covers the entire level
-        self.camera = Camera(self.map.width, self.map.height)
+        
+        self.map_generator = MapGenerator() # generates a random map using the MapGenerator class from utils.py
+        self.map = self.map_generator.generate()  # Ensure this returns an iterable (list of lists)
+        self.camera = Camera(self.map_generator.width * TILESIZE, self.map_generator.height * TILESIZE)
         print('data is loaded')
 
     def new(self):
@@ -58,8 +58,8 @@ class Game:
         #self.player = Player(self, 15, 15)
         #self.mob = Mob(self, 4, 4) 
         #self.wall = Wall(self, WIDTH/2/TILESIZE, HEIGHT/2/TILESIZE)
-        for row, tiles in enumerate(self.map.data):
-            for col, tile, in enumerate(tiles):
+        for row, tiles in enumerate(self.map):
+            for col, tile in enumerate(tiles):
                 if tile == '1':
                     # call class constructor without assigning variable...when
                     Wall(self, col, row)
@@ -67,8 +67,6 @@ class Game:
                     self.player = Player(self, col, row)
                 if tile == 'M':
                     Mob(self, col, row)
-                if tile == "W":
-                    moveable_wall(self, col, row)
         self.run()
    
 
@@ -116,7 +114,8 @@ class Game:
         self.draw_text(str(self.dt), 24, WHITE, WIDTH/2, HEIGHT/4)
         # self.draw_text(str(self.game_cooldown.time), 24, WHITE, WIDTH/2, HEIGHT/.5)
         self.draw_text(str(self.game_cooldown.ready()), 24, WHITE, WIDTH/2, HEIGHT/3)
-        self.draw_text(str(self.player.pos), 24, WHITE, WIDTH/2, HEIGHT/2)
+        if hasattr(self, 'player'):
+            self.draw_text(str(self.player.pos), 24, WHITE, WIDTH/2, HEIGHT/2)
 
         pg.display.flip() # Update the full display Surface to the screen
 

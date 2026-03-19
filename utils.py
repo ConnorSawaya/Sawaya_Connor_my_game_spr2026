@@ -1,27 +1,9 @@
-from fileinput import filename
 import pygame as pg
 from settings import *
-# this class creates a countdown timer for a cooldown\
+import random 
 
 
 
-
-
-class Map:
-    def __init__(self, filename):
-        # creating the data for builing the map using a list
-        self.data = []
-
-        # open a specific file and close it with 'with'
-        with open(filename, 'rt') as f:
-            for line in f:
-                self.data.append(line.strip())
-
-        # 
-        self.tilewidth = len(self.data[0])
-        self.tileheight = len(self.data)
-        self.width = self.tilewidth * TILESIZE
-        self.height = self.tileheight * TILESIZE
 
 class Spritesheet: # Class for loading spritesheets
     def __init__(self, filename):
@@ -41,9 +23,9 @@ class Camera: # Camera Class so the camera can follow the player
     def __init__(self, width, height):
         self.camera = pg.Rect(0, 0, width, height) 
         # Width and height of the map for camera 
-        self.width = width 
+        self.width = width
         self.height = height
-
+        
     def apply(self, entity): # Applies camera offest 
         return entity.rect.move(self.camera.topleft)
 
@@ -67,11 +49,7 @@ class Camera: # Camera Class so the camera can follow the player
         x = -target.rect.centerx + int(WIDTH / 2)
         y = -target.rect.centery + int(HEIGHT / 2)
 
-        # limit moving to the map size
-        x = min(0, x)
-        x = max(-(self.width - WIDTH), x)
-        y = min(0, y)
-        y = max(-(self.height - HEIGHT), y)
+        
 
         self.camera = pg.Rect(x, y, self.width, self.height) # Update camera based on target
         
@@ -80,6 +58,9 @@ class Camera: # Camera Class so the camera can follow the player
 class Cooldown:
     def __init__(self, time):
         self.start_time = 0
+        
+        self.width = WIDTH
+        self.height = HEIGHT
 
         self.time = time # time in milliseconds for cooldown
     def start(self):
@@ -93,3 +74,32 @@ class Cooldown:
             self.start()
             return True
         return False
+    
+class MapGenerator: # Class for generating the random rooms/map
+    def __init__(self, _=None, width=30, height=20): 
+        self.width = width
+        self.height = height
+        self.map = self.generate_random_map(width, height) 
+
+    def generate_random_map(self, width, height):
+        self.seed = random.randint(0, 1000000) #  random seed for the map
+        random.seed(self.seed) # sets the set
+        map_data = []
+        for _ in range(height):
+            row = ''
+            for _ in range(width):
+                if random.random() < 0.2: # chance of wall
+                    row += '1'
+                else:
+                    row += '0'
+            map_data.append(row)
+        # Place player spawn in the center, clearing any wall there
+        mid_row = height // 2
+        mid_col = width // 2
+        row = map_data[mid_row]
+        map_data[mid_row] = row[:mid_col] + 'P' + row[mid_col + 1:]
+        return map_data
+
+    def generate(self):
+        return self.map
+            
