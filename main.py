@@ -55,9 +55,6 @@ class Game:
         self.all_walls = pg.sprite.Group()
         self.all_mobs = pg.sprite.Group()
         self.all_projectiles = pg.sprite.Group()
-        #self.player = Player(self, 15, 15)
-        #self.mob = Mob(self, 4, 4) 
-        #self.wall = Wall(self, WIDTH/2/TILESIZE, HEIGHT/2/TILESIZE)
         for row, tiles in enumerate(self.map):
             for col, tile in enumerate(tiles):
                 if tile == '1':
@@ -76,12 +73,10 @@ class Game:
             self.events()
             self.update()
             self.draw()
-            
-
-    def events(self):
+ 
+    def events(self): # Event loop
         for event in pg.event.get():
-            
-            if event.type == pg.QUIT:
+            if event.type == pg.QUIT: # quit loop check
                 if self.playing:
                     self.playing = False
                 self.running = False
@@ -93,17 +88,17 @@ class Game:
     def update(self):
         self.all_sprites.update() # Updates all sprites 
         print(len(self.all_sprites))
+
         # keep camera centered on the player once they exist
         if hasattr(self, 'player'):
-            self.camera.update(self.player)
+            self.camera.update(self.player) # updates via player pos
 
         
         
 
     
     def draw(self): # draws everything on the screen 
-
-        self.screen.fill(BLUE) # Screen Fill Blue 
+        self.screen.fill(BLUE) # Screen background color
 
         self.camera.draw_world(self.screen, self.all_sprites) # Updats the circle for the camera
         if hasattr(self, 'player'):
