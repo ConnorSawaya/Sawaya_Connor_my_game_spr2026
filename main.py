@@ -26,7 +26,7 @@ class Game:
         self.clock = pg.time.Clock()
         self.running = True
         self.playing = True
-        self.game_cooldown = Cooldown(5000) # cooldown thing 
+        
         
 
     
@@ -34,19 +34,19 @@ class Game:
 
     def load_data(self):
         self.game_dir = path.dirname(__file__)
-        # project/script directory and image directory
         self.script_dir = self.game_dir
         self.img_dir = path.join(self.game_dir, 'images')
         # load shared spritesheet 
         try:
             self.sprite_sheet = Spritesheet(path.join(self.img_dir, 'sprite_sheet.png'))
         except Exception:
-            # If spritesheet not present, leave attribute so callers can still reference it
             self.sprite_sheet = None
-        
-        self.map_generator = MapGenerator() # generates a random map using the MapGenerator class from utils.py
-        self.map = self.map_generator.generate()  # Ensure this returns an iterable (list of lists)
-        self.camera = Camera(self.map_generator.width * TILESIZE, self.map_generator.height * TILESIZE)
+
+        # Load map from level1.txt
+        map_path = path.join(self.game_dir, 'level1.txt')
+        with open(map_path, 'r') as f:
+            self.map = [line.strip() for line in f if line.strip()]
+        self.camera = Camera(len(self.map[0]) * TILESIZE, len(self.map) * TILESIZE)
         print('data is loaded')
 
     def new(self):
@@ -63,6 +63,7 @@ class Game:
                 if tile == 'P':
                     self.player = Player(self, col, row)
                 if tile == 'M':
+                    print("spawning mob at", col, row)
                     Mob(self, col, row)
         self.run()
    
@@ -80,6 +81,11 @@ class Game:
                 if self.playing:
                     self.playing = False
                 self.running = False
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_t:
+                    # Toggle SHOW_STRING in settings
+                    import settings
+                    settings.SHOW_STRING = not settings.SHOW_STRING
         
 
     def quit(self):
@@ -92,7 +98,7 @@ class Game:
         # keep camera centered on the player once they exist
         if hasattr(self, 'player'):
             self.camera.update(self.player) # updates via player pos
-
+      
         
         
 
@@ -100,17 +106,16 @@ class Game:
     def draw(self): # draws everything on the screen 
         self.screen.fill(BLUE) # Screen background color
 
-        self.camera.draw_world(self.screen, self.all_sprites) # Updats the circle for the camera
+        self.camera.draw_world(self.screen, self.all_sprites) # Updates the circle for the camera
+        # Draw string between player and mob if enabled
+        draw_string_between_player_and_mob(self.screen, self)
         if hasattr(self, 'player'):
             self.camera.apply_circular_mask(self.screen, self.player)
-            
-        # hud text should be drawn in screen space, not world space
-        self.draw_text("Hello World", 24, WHITE, WIDTH/2, TILESIZE)
-        self.draw_text(str(self.dt), 24, WHITE, WIDTH/2, HEIGHT/4)
-        # self.draw_text(str(self.game_cooldown.time), 24, WHITE, WIDTH/2, HEIGHT/.5)
-        self.draw_text(str(self.game_cooldown.ready()), 24, WHITE, WIDTH/2, HEIGHT/3)
+        
+        
         if hasattr(self, 'player'):
             self.draw_text(str(self.player.pos), 24, WHITE, WIDTH/2, HEIGHT/2)
+        
 
         pg.display.flip() # Update the full display Surface to the screen
 
@@ -121,12 +126,13 @@ class Game:
         text_rect = text_surface.get_rect()
         text_rect.midtop = (x,y)
         self.screen.blit(text_surface, text_rect)
+        
 
 if __name__ == "__main__": 
     g = Game()
 
-while g.running: # while game is running 
-    g.new() # start a new game
+    while g.running: # while game is running 
+        g.new() # start a new game
 
 
 pg.quit()

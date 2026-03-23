@@ -1,5 +1,7 @@
 import pygame as pg
 from settings import *
+from sprites import *
+from main import *
 import random 
 
 
@@ -74,32 +76,30 @@ class Cooldown:
             self.start()
             return True
         return False
-    
-class MapGenerator: # Class for generating the random rooms/map
-    def __init__(self, _=None, width=30, height=20): 
-        self.width = width
-        self.height = height
-        self.map = self.generate_random_map(width, height) 
 
-    def generate_random_map(self, width, height):
-        self.seed = random.randint(0, 1000000) #  random seed for the map
-        random.seed(self.seed) # sets the set
-        map_data = []
-        for _ in range(height):
-            row = ''
-            for _ in range(width):
-                if random.random() < 0.2: # chance of wall
-                    row += '1'
-                else:
-                    row += '0'
-            map_data.append(row)
-        # Place player spawn in the center, clearing any wall there
-        mid_row = height // 2
-        mid_col = width // 2
-        row = map_data[mid_row]
-        map_data[mid_row] = row[:mid_col] + 'P' + row[mid_col + 1:]
-        return map_data
 
-    def generate(self):
-        return self.map
+
+
+
+
+def draw_string_between_player_and_mob(surface, game): # MADE WITh Claude Code! 
+    from settings import SHOW_STRING, STRING_DISTANCE
+    if not hasattr(game, 'player') or not hasattr(game, 'all_mobs'):
+        return
+    if not SHOW_STRING:
+        return
+    player = game.player
+    # Draw string to the first mob (can be extended for multiple mobs)
+    for mob in game.all_mobs:
+        # Use world coords for distance, screen coords for drawing
+        dx = player.pos.x - mob.pos.x
+        dy = player.pos.y - mob.pos.y
+        dist = (dx ** 2 + dy ** 2) ** 0.5 
+        if dist <= STRING_DISTANCE:
+            player_screen = game.camera.apply(player).center  #
+            mob_screen = game.camera.apply(mob).center # 
+            pg.draw.line(surface, (255, 255, 0), player_screen, mob_screen, 3) #
+        
+        # Only draw to the first mob for now
+        break
             

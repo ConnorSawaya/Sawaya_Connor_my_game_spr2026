@@ -1,3 +1,5 @@
+STRING_DISTANCE = 200  # Distance for string between player and mob
+SHOW_STRING = True     # Toggle to show/hide string
 import os
 
 import pygame as pg

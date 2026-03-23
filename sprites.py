@@ -6,6 +6,8 @@ from pygame.sprite import Sprite
 from sympy import true
 from settings import *
 from utils import *
+from main import *
+
 
 
 vec = pg.math.Vector2
@@ -74,6 +76,7 @@ class Player(Sprite):
         if keys[pg.K_s]: self.vel.y = PLAYER_SPEED
         if keys[pg.K_p]: p = Projectile(self.game, self.rect.x, self.rect.y)
         if self.vel.x != 0 and self.vel.y != 0: self.vel *= 0.7071
+        
         self.moving = (self.vel.x != 0 or self.vel.y != 0)
 
 
@@ -126,36 +129,62 @@ class Player(Sprite):
         self.hit_rect.centery = self.pos.y # Update pos for Y axis collision
         collide_with_walls(self, self.game.all_walls, 'y') # Y axis collision
         self.rect.center = self.hit_rect.center # updates pos 
+        # string() # testing string class (removed, undefined)
+        return self.pos
+
 
 
 
 
 class Mob(Sprite):
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites
+        self.groups = game.all_sprites, game.all_mobs
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
-        self.vel = vec(1,0)
-        self.pos = vec(x,y) * TILESIZE
-        self.speed = 10 # speed for mob movement
+        self.vel = vec(1, 0).normalize()
+        self.pos = vec(x, y) * TILESIZE
+        self.speed = 1  # speed for mob movement
 
     def update(self):
-        hits = pg.sprite.spritecollide(self, self.game.all_walls, False) # Checks for Collisons 
-        if hits:
-            print("collided")  # debug message
-            self.speed = -self.speed   # increase speed after hitting wall
- 
-        # If mob goes off screen horizontally
-        if self.rect.x > WIDTH or self.rect.x < 0:
-            self.speed *= -1      # reverse direction
-            self.pos.y += TILESIZE  # move down one row
- 
-        self.pos += self.speed * self.vel
-        self.rect.center = self.pos
+        # Simple pathfinding: move towards player
         
+        player_pos = self.game.player.pos
+        direction = (player_pos - self.pos)
+        
+        if direction.length() != 0:
+            direction = direction.normalize()
+        self.vel = direction * self.speed
+
+        # Move in x direction and check for wall collision
+        self.pos.x += self.vel.x
+        self.rect.centerx = self.pos.x
+        hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
+        if hits:
+            # Undo x movement if collided
+            if self.vel.x > 0:
+                self.pos.x = hits[0].rect.left - self.rect.width / 2
+            else:
+                self.pos.x = hits[0].rect.right + self.rect.width / 2
+                self.vel.x = 0
+                self.rect.centerx = self.pos.x
+
+        # Move in y direction and check for wall collision
+        self.pos.y += self.vel.y
+        self.rect.centery = self.pos.y
+        hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
+        if hits:
+            # Undo y movement if collided
+            if self.vel.y > 0:
+                self.pos.y = hits[0].rect.top - self.rect.height / 2
+            else:
+                self.pos.y = hits[0].rect.bottom + self.rect.height / 2
+                self.vel.y = 0
+                self.rect.centery = self.pos.y
+
+        self.rect.center = self.pos
 
 
 
@@ -177,24 +206,6 @@ class Wall(Sprite):
         pass 
             
 
-
-
-
-class Coin(Sprite): # Not used Right now
-    def __init__(self, game, x, y):
-        self.groups = game.all_sprites
-        Sprite.__init__(self, self.groups)
-        self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        
-        self.image.fill(YELLOW) # yellow for coin
-        self.rect = self.image.get_rect()
-        self.vel = vec(0,0)
-        self.pos = vec(x,y) * TILESIZE
-    def update(self):
-        pass
-
-
 class Projectile(Sprite): # not used right now, but will be used for player attacks
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.all_projectiles
@@ -209,7 +220,7 @@ class Projectile(Sprite): # not used right now, but will be used for player atta
         print("Working Projectile init")
 
     def update(self):
-        hits = pg.sprite.spritecollide(self, self.game.all_walls, true) # check for collisons with walls
+        hits = pg.sprite.spritecollide(self, self.game.all_walls, True) # check for collisons with walls
         print("hits")
         self.pos += self.speed * self.vel
         self.rect.center = self.pos
