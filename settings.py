@@ -1,5 +1,8 @@
-STRING_DISTANCE = 200  # Distance for string between player and mob
-SHOW_STRING = True     # Toggle to show/hide string
+STRING_DISTANCE = 200    # Rest length of elastic string (slack below this)
+SHOW_STRING = True       # Toggle to show/hide string
+MOB_FRICTION = 0.90      # Velocity multiplier per frame (close to 1 = low friction)
+STRING_SPRING_K = 0.18   # Spring constant — how snappy the elastic is
+MOB_LAUNCH_FORCE = 22    # Extra force multiplier when slingshot key is pressed
 import os
 
 import pygame as pg
@@ -10,7 +13,7 @@ TITLE = "My cool game..."
 FPS = 60
 TILESIZE = 32
 BORDER_THICKNESS = 2
-CAMERA_RADIUS = 220
+CAMERA_RADIUS = 480
 
 
 

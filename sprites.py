@@ -5,6 +5,7 @@ import pygame as pg
 from pygame.sprite import Sprite
 from sympy import true
 from settings import *
+
 from utils import *
 from main import *
 
@@ -74,7 +75,6 @@ class Player(Sprite):
         if keys[pg.K_d]: self.vel.x = PLAYER_SPEED
         if keys[pg.K_w]: self.vel.y = -PLAYER_SPEED
         if keys[pg.K_s]: self.vel.y = PLAYER_SPEED
-        if keys[pg.K_p]: p = Projectile(self.game, self.rect.x, self.rect.y)
         if self.vel.x != 0 and self.vel.y != 0: self.vel *= 0.7071
         
         self.moving = (self.vel.x != 0 or self.vel.y != 0)
@@ -135,7 +135,6 @@ class Player(Sprite):
 
 
 
-
 class Mob(Sprite):
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.all_mobs
@@ -144,45 +143,58 @@ class Mob(Sprite):
         self.image = pg.Surface((TILESIZE, TILESIZE))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
-        self.vel = vec(1, 0).normalize()
+        self.vel = vec(0, 0)  # starts stationary, physics drives it
         self.pos = vec(x, y) * TILESIZE
-        self.speed = 1  # speed for mob movement
+
+    def launch(self):
+        # Slingshot: fling mob toward player with force based on string stretch
+        dx = self.game.player.pos.x - self.pos.x
+        dy = self.game.player.pos.y - self.pos.y
+        dist = (dx ** 2 + dy ** 2) ** 0.5
+        if dist > 0:
+            direction = vec(dx, dy).normalize()
+            stretch = max(0, dist - STRING_DISTANCE)
+            # launch force scales with how far the string is stretched
+            self.vel += direction * MOB_LAUNCH_FORCE * (1 + stretch / STRING_DISTANCE)
 
     def update(self):
-        # Simple pathfinding: move towards player
-        
-        player_pos = self.game.player.pos
-        direction = (player_pos - self.pos)
-        
-        if direction.length() != 0:
-            direction = direction.normalize()
-        self.vel = direction * self.speed
+        # --- Elastic string spring force ---
+        # Only pulls mob toward player when string is stretched past rest length
+        dx = self.game.player.pos.x - self.pos.x
+        dy = self.game.player.pos.y - self.pos.y
+        dist = (dx ** 2 + dy ** 2) ** 0.5
 
-        # Move in x direction and check for wall collision
+        if dist > STRING_DISTANCE and dist > 0:
+            direction = vec(dx, dy).normalize()
+            stretch = dist - STRING_DISTANCE
+            self.vel += direction * STRING_SPRING_K * stretch
+
+       
+        self.vel *= MOB_FRICTION
+
+        # --- Move X and check wall collision ---
         self.pos.x += self.vel.x
         self.rect.centerx = self.pos.x
         hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
         if hits:
-            # Undo x movement if collided
             if self.vel.x > 0:
                 self.pos.x = hits[0].rect.left - self.rect.width / 2
             else:
                 self.pos.x = hits[0].rect.right + self.rect.width / 2
-                self.vel.x = 0
-                self.rect.centerx = self.pos.x
+            self.vel.x *= -0.4  # bounce off wall with energy loss
+            self.rect.centerx = self.pos.x
 
-        # Move in y direction and check for wall collision
+        # --- Move Y and check wall collision ---
         self.pos.y += self.vel.y
         self.rect.centery = self.pos.y
         hits = pg.sprite.spritecollide(self, self.game.all_walls, False)
         if hits:
-            # Undo y movement if collided
             if self.vel.y > 0:
                 self.pos.y = hits[0].rect.top - self.rect.height / 2
             else:
                 self.pos.y = hits[0].rect.bottom + self.rect.height / 2
-                self.vel.y = 0
-                self.rect.centery = self.pos.y
+            self.vel.y *= -0.4  # bounce off wall with energy loss
+            self.rect.centery = self.pos.y
 
         self.rect.center = self.pos
 
@@ -206,22 +218,28 @@ class Wall(Sprite):
         pass 
             
 
-class Projectile(Sprite): # not used right now, but will be used for player attacks
-    def __init__(self, game, x, y):
+class Projectile(Sprite):
+    def __init__(self, game, x, y, direction=None):
         self.groups = game.all_sprites, game.all_projectiles
         Sprite.__init__(self, self.groups)
         self.game = game
-        self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image.fill(RED)
+        self.image = pg.Surface((8, 8))
+        self.image.fill(YELLOW)
         self.rect = self.image.get_rect()
-        self.vel = vec(1,0)
-        self.pos = vec(x,y) * TILESIZE
-        self.speed = 10
-        print("Working Projectile init")
+        self.pos = vec(x, y)  # pixel coords, no TILESIZE multiply
+        self.rect.center = self.pos
+        self.speed = 400
+        if direction is not None and direction.length() > 0:
+            self.vel = direction.normalize() * self.speed
+        else:
+            self.vel = vec(1, 0) * self.speed
+        self.spawn_time = pg.time.get_ticks()
 
     def update(self):
-        hits = pg.sprite.spritecollide(self, self.game.all_walls, True) # check for collisons with walls
-        print("hits")
-        self.pos += self.speed * self.vel
+        self.pos += self.vel * self.game.dt
         self.rect.center = self.pos
+        if pg.sprite.spritecollide(self, self.game.all_walls, False):
+            self.kill()
+        if pg.time.get_ticks() - self.spawn_time > 2000:
+            self.kill()
  

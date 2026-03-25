@@ -86,6 +86,16 @@ class Game:
                     # Toggle SHOW_STRING in settings
                     import settings
                     settings.SHOW_STRING = not settings.SHOW_STRING
+                if event.key == pg.K_SPACE:
+                    # Slingshot: fling all mobs toward player
+                    for mob in self.all_mobs:
+                        mob.launch()
+            if event.type == pg.MOUSEBUTTONDOWN:
+                if event.button == 1 and hasattr(self, 'player'):
+                    mouse_pos = vec(pg.mouse.get_pos())
+                    world_mouse = mouse_pos - vec(self.camera.camera.topleft)
+                    direction = world_mouse - self.player.pos
+                    Projectile(self, self.player.pos.x, self.player.pos.y, direction)
         
 
     def quit(self):
@@ -93,29 +103,27 @@ class Game:
 
     def update(self):
         self.all_sprites.update() # Updates all sprites 
-        print(len(self.all_sprites))
+        
 
         # keep camera centered on the player once they exist
         if hasattr(self, 'player'):
             self.camera.update(self.player) # updates via player pos
-      
-        
-        
-
     
     def draw(self): # draws everything on the screen 
         self.screen.fill(BLUE) # Screen background color
 
         self.camera.draw_world(self.screen, self.all_sprites) # Updates the circle for the camera
         # Draw string between player and mob if enabled
-        draw_string_between_player_and_mob(self.screen, self)
+        if hasattr(self, 'player') and hasattr(self, 'all_mobs'):
+            line.draw_string_between_player_and_mob(self.screen, self) # Draws string between player and mob if enabled
+        
         if hasattr(self, 'player'):
             self.camera.apply_circular_mask(self.screen, self.player)
         
         
         if hasattr(self, 'player'):
             self.draw_text(str(self.player.pos), 24, WHITE, WIDTH/2, HEIGHT/2)
-        
+            # next updat
 
         pg.display.flip() # Update the full display Surface to the screen
 

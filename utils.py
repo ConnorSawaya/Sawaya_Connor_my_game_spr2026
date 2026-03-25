@@ -80,26 +80,29 @@ class Cooldown:
 
 
 
+class line(Sprite):
+    def draw_string_between_player_and_mob(surface, game):
+        if not hasattr(game, 'player') or not hasattr(game, 'all_mobs'):
+            return
+        if not SHOW_STRING:
+            return
+        player = game.player
+        for mob in game.all_mobs:
+            dx = player.pos.x - mob.pos.x
+            dy = player.pos.y - mob.pos.y
+            dist = (dx ** 2 + dy ** 2) ** 0.5
 
+            # Color shifts from green (slack) → yellow → red (max stretch)
+            stretch = max(0, dist - STRING_DISTANCE)
+            t = min(1.0, stretch / STRING_DISTANCE)  # 0.0 = slack, 1.0 = fully stretched
+            r = int(255 * t)
+            g = int(255 * (1 - t))
+            color = (r, g, 0)
 
-def draw_string_between_player_and_mob(surface, game): # MADE WITh Claude Code! 
-    from settings import SHOW_STRING, STRING_DISTANCE
-    if not hasattr(game, 'player') or not hasattr(game, 'all_mobs'):
-        return
-    if not SHOW_STRING:
-        return
-    player = game.player
-    # Draw string to the first mob (can be extended for multiple mobs)
-    for mob in game.all_mobs:
-        # Use world coords for distance, screen coords for drawing
-        dx = player.pos.x - mob.pos.x
-        dy = player.pos.y - mob.pos.y
-        dist = (dx ** 2 + dy ** 2) ** 0.5 
-        if dist <= STRING_DISTANCE:
-            player_screen = game.camera.apply(player).center  #
-            mob_screen = game.camera.apply(mob).center # 
-            pg.draw.line(surface, (255, 255, 0), player_screen, mob_screen, 3) #
-        
-        # Only draw to the first mob for now
-        break
+            thickness = 2 + int(t * 3)  # string gets thicker when stretched
+
+            player_screen = game.camera.apply(player).center
+            mob_screen = game.camera.apply(mob).center
+            pg.draw.line(surface, color, player_screen, mob_screen, thickness)
             
+           
