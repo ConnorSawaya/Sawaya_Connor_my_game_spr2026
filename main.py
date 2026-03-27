@@ -1,48 +1,34 @@
 # game engine using template from Chris Bradfield's "Making Games with Python & Pygame"
 
-'''
-Sprite Sheet llama made  By CaptainBrosset
-'''
+"""
+Sprite Sheet llama made By CaptainBrosset
+"""
 
 import pygame as pg
 from os import path
 from settings import *
 from sprites import *
 from utils import *
-vec = pg.math.Vector2
 
 
-# import settings
-
-
-
-# the game class that will be instantiated in order to run the game...
 class Game:
     def __init__(self):
         pg.init()
-        # setting up pygame screen using tuple value for width height
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
-        pg.display.set_caption(TITLE) # window title (from settings
+        pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
         self.running = True
         self.playing = True
-        
-        
-
-    
-    # a method is a function tied to a Class
 
     def load_data(self):
         self.game_dir = path.dirname(__file__)
         self.script_dir = self.game_dir
         self.img_dir = path.join(self.game_dir, 'images')
-        # load shared spritesheet 
         try:
             self.sprite_sheet = Spritesheet(path.join(self.img_dir, 'sprite_sheet.png'))
         except Exception:
             self.sprite_sheet = None
 
-        # Load map from level1.txt
         map_path = path.join(self.game_dir, 'level1.txt')
         with open(map_path, 'r') as f:
             self.map = [line.strip() for line in f if line.strip()]
@@ -55,97 +41,81 @@ class Game:
         self.all_walls = pg.sprite.Group()
         self.all_mobs = pg.sprite.Group()
         self.all_projectiles = pg.sprite.Group()
+
         for row, tiles in enumerate(self.map):
             for col, tile in enumerate(tiles):
                 if tile == '1':
-                    # call class constructor without assigning variable...when
                     Wall(self, col, row)
                 if tile == 'P':
-                    self.player = Player(self, col, row)
+                    self.player = Player(
+                        self,
+                        col,
+                        row,
+                        controls={"left": pg.K_a, "right": pg.K_d, "jump": pg.K_w},
+                        color=WHITE,
+                    )
                 if tile == 'M':
-                    print("spawning mob at", col, row)
-                    Mob(self, col, row)
+                    self.player2 = Mob(self, col, row)
         self.run()
-   
 
     def run(self):
         while self.running:
-            self.dt = self.clock.tick(FPS) / 1000 # Clock Ticks in seconds
+            self.dt = self.clock.tick(FPS) / 1000
             self.events()
             self.update()
             self.draw()
- 
-    def events(self): # Event loop
+
+    def events(self):
         for event in pg.event.get():
-            if event.type == pg.QUIT: # quit loop check
+            if event.type == pg.QUIT:
                 if self.playing:
                     self.playing = False
                 self.running = False
-            if event.type == pg.KEYDOWN:
-                if event.key == pg.K_t:
-                    # Toggle SHOW_STRING in settings
-                    import settings
-                    settings.SHOW_STRING = not settings.SHOW_STRING
-                if event.key == pg.K_SPACE:
-                    # Slingshot: fling all mobs toward player
-                    for mob in self.all_mobs:
-                        mob.launch()
-            if event.type == pg.MOUSEBUTTONDOWN:
-                if event.button == 1 and hasattr(self, 'player'):
-                    mouse_pos = vec(pg.mouse.get_pos())
-                    world_mouse = mouse_pos - vec(self.camera.camera.topleft)
-                    direction = world_mouse - self.player.pos
-                    Projectile(self, self.player.pos.x, self.player.pos.y, direction)
-        
+
+
+
+            if event.type == pg.KEYDOWN and event.key == pg.K_t: # Checks for t press
+                import settings
+                settings.SHOW_STRING = not settings.SHOW_STRING # Check toggle for showing the string between player and mob
+
+
 
     def quit(self):
         pass
 
     def update(self):
-        self.all_sprites.update() # Updates all sprites 
-        
+        self.all_sprites.update()
+        if hasattr(self, 'player'): # Only update camera if player exists
+            self.camera.update(self.player)
 
-        # keep camera centered on the player once they exist
-        if hasattr(self, 'player'):
-            self.camera.update(self.player) # updates via player pos
-    
-    def draw(self): # draws everything on the screen 
-        self.screen.fill(BLUE) # Screen background color
+    def draw(self):
+        self.screen.fill(SKY_BLUE)
 
-        self.camera.draw_world(self.screen, self.all_sprites) # Updates the circle for the camera
-        # Draw string between player and mob if enabled
-        if hasattr(self, 'player') and hasattr(self, 'all_mobs'):
-            line.draw_string_between_player_and_mob(self.screen, self) # Draws string between player and mob if enabled
-        
-        if hasattr(self, 'player'):
+        self.camera.draw_world(self.screen, self.all_sprites) # Draw the world using the camera's draw_world method
+
+        if hasattr(self, 'player') and hasattr(self, 'player2'):
+            line.draw_string_between_player_and_mob(self.screen, self) # Draw String methond
+
+        if hasattr(self, 'player'): 
             self.camera.apply_circular_mask(self.screen, self.player)
-        
-        
-        if hasattr(self, 'player'):
-            self.draw_text(str(self.player.pos), 24, WHITE, WIDTH/2, HEIGHT/2)
-            # next updat
+            self.draw_text("P1: WASD/W   P2: Arrow Keys", 24, WHITE, WIDTH / 2, 15) # Controlls text on screen
 
-        pg.display.flip() # Update the full display Surface to the screen
+        pg.display.flip()
 
     def draw_text(self, text, size, color, x, y):
         font_name = pg.font.match_font('arial')
         font = pg.font.Font(font_name, size)
         text_surface = font.render(text, True, color)
         text_rect = text_surface.get_rect()
-        text_rect.midtop = (x,y)
+        text_rect.midtop = (x, y)
         self.screen.blit(text_surface, text_rect)
-        
 
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     g = Game()
 
-    while g.running: # while game is running 
-        g.new() # start a new game
+    while g.running:
+        g.new()
 
 
 pg.quit()
-
-
-    
-
-    
