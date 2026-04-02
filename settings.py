@@ -1,12 +1,11 @@
 import os
-
 import pygame as pg
 
-STRING_DISTANCE = 200    # Rest length of elastic string (slack below this)
+STRING_DISTANCE = 180    # Rest length of elastic string (slack below this)
 SHOW_STRING = True       # Toggle to show/hide string
-MOB_FRICTION = 0.97      # Velocity multiplier per frame(1 = no friction, 0 = full stop)
+FRICTION = 0.97      # Velocity multiplier per frame 1 = none, 0 = stop
 
-GRAVITY = 1600           # Gravity strength (pixels/sec^2)
+GRAVITY = 1500           #Gravity strength
 
 STRING_SPRING_K = 0.18   # How hard the string pulls when its stretched to far
 PLAYER_STRING_SPRING_K = 2.0  # How hard the string pulls the player back when stretched
@@ -21,16 +20,16 @@ TITLE = "The Best Game Evahh"
 FPS = 60
 TILESIZE = 32
 BORDER_THICKNESS = 2
-CAMERA_RADIUS = 480
+CAMERA_RADIUS = 720 # Radius of camera mask in pixels
 
 
 
 
 
-script_dir = os.path.dirname(__file__) 
+script_dir = os.path.dirname(__file__)  # File path of the current script
 
 PLAYER_SPEED = 280  # Player Speed for moving
-JUMP_FORCE = 600    # Upward velocity applied on jump (pixels/sec)
+JUMP_FORCE = 600    # Upward velocity for jump
 
 PLAYER_HIT_RECT = pg.Rect(0, 0, TILESIZE, TILESIZE)  # Player Hitbox 
 

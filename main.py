@@ -32,6 +32,8 @@ class Game:
         map_path = path.join(self.game_dir, 'level1.txt')
         with open(map_path, 'r') as f:
             self.map = [line.strip() for line in f if line.strip()]
+
+
         self.camera = Camera(len(self.map[0]) * TILESIZE, len(self.map) * TILESIZE)
         print('data is loaded')
 
@@ -39,7 +41,6 @@ class Game:
         self.load_data()
         self.all_sprites = pg.sprite.Group()
         self.all_walls = pg.sprite.Group()
-        self.all_mobs = pg.sprite.Group()
         self.all_projectiles = pg.sprite.Group()
 
         for row, tiles in enumerate(self.map):
@@ -55,7 +56,7 @@ class Game:
                         color=WHITE,
                     )
                 if tile == 'M':
-                    self.player2 = Mob(self, col, row)
+                    self.player2 = Player2(self, col, row)
         self.run()
 
     def run(self):
@@ -76,7 +77,7 @@ class Game:
 
             if event.type == pg.KEYDOWN and event.key == pg.K_t: # Checks for t press
                 import settings
-                settings.SHOW_STRING = not settings.SHOW_STRING # Check toggle for showing the string between player and mob
+                settings.SHOW_STRING = not settings.SHOW_STRING # Check toggle for showing the string between player and player2
 
 
 
@@ -86,15 +87,15 @@ class Game:
     def update(self):
         self.all_sprites.update()
         if hasattr(self, 'player'): # Only update camera if player exists
-            self.camera.update(self.player)
+            self.camera.update(self.player) # Update camera to follow player
 
     def draw(self):
-        self.screen.fill(SKY_BLUE)
+        self.screen.fill(SKY_BLUE) # Sets background color to blue
 
         self.camera.draw_world(self.screen, self.all_sprites) # Draw the world using the camera's draw_world method
 
         if hasattr(self, 'player') and hasattr(self, 'player2'):
-            line.draw_string_between_player_and_mob(self.screen, self) # Draw String methond
+            line.draw_string_between_player_and_player2(self.screen, self) # Draw String methond
 
         if hasattr(self, 'player'): 
             self.camera.apply_circular_mask(self.screen, self.player)

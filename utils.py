@@ -62,17 +62,17 @@ class Cooldown:
         return False
 
 
-class line(Sprite):
-    def draw_string_between_player_and_mob(surface, game):
-        if not hasattr(game, 'player') or not hasattr(game, 'player2'):
+class line(Sprite): # Class For string between player and player2
+    def draw_string_between_player_and_player2(surface, game): # Method to draw string between player and player2
+        if not hasattr(game, 'player') or not hasattr(game, 'player2'): # Check if player and player2 exist
             return
         if not SHOW_STRING:
             return
 
         player = game.player
-        mob = game.player2
-        dx = player.pos.x - mob.pos.x
-        dy = player.pos.y - mob.pos.y
+        player2 = game.player2 # Assuming player2 is the player2
+        dx = player.pos.x - player2.pos.x
+        dy = player.pos.y - player2.pos.y
         dist = (dx ** 2 + dy ** 2) ** 0.5
 
         stretch = max(0, dist - STRING_DISTANCE)
@@ -83,5 +83,5 @@ class line(Sprite):
         thickness = 2 + int(t * 3)
 
         player_screen = game.camera.apply(player).center
-        mob_screen = game.camera.apply(mob).center
-        pg.draw.line(surface, color, player_screen, mob_screen, thickness)
+        player2_screen = game.camera.apply(player2).center
+        pg.draw.line(surface, color, player_screen, player2_screen, thickness)

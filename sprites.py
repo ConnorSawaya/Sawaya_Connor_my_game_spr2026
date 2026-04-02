@@ -11,6 +11,27 @@ def collide_hit_rect(one, two):
     return one.hit_rect.colliderect(two.rect)
 
 
+def collide_with_player(sprite, other, direction):
+    if not sprite.hit_rect.colliderect(other.hit_rect):
+        return
+
+    if direction == 'x':
+        if other.hit_rect.centerx > sprite.hit_rect.centerx:
+            sprite.pos.x = other.hit_rect.left - sprite.hit_rect.width / 2
+        if other.hit_rect.centerx < sprite.hit_rect.centerx:
+            sprite.pos.x = other.hit_rect.right + sprite.hit_rect.width / 2
+        sprite.vel.x = 0
+        sprite.hit_rect.centerx = sprite.pos.x
+
+    if direction == 'y':
+        if other.hit_rect.centery > sprite.hit_rect.centery:
+            sprite.pos.y = other.hit_rect.top - sprite.hit_rect.height / 2
+        if other.hit_rect.centery < sprite.hit_rect.centery:
+            sprite.pos.y = other.hit_rect.bottom + sprite.hit_rect.height / 2
+        sprite.vel.y = 0
+        sprite.hit_rect.centery = sprite.pos.y
+
+
 def collide_with_walls(sprite, group, direction):
     hits = pg.sprite.spritecollide(sprite, group, False, collide_hit_rect)
     if not hits:
@@ -112,21 +133,22 @@ class Player(Sprite):
         self.get_keys()
         self.vel.y += GRAVITY * self.game.dt # Apply gravity to vertical velocity
 
-        for mob in self.game.all_mobs: # Apply string force from each mob to the player
-            # Calculate distence and direction from player to mob
-            dx = mob.pos.x - self.pos.x 
-            dy = mob.pos.y - self.pos.y
-            dist = (dx ** 2 + dy ** 2) ** 0.5
+        # Apply string force from player2 to the player
+        player2 = self.game.player2
+        dx = player2.pos.x - self.pos.x 
+        dy = player2.pos.y - self.pos.y
+        dist = (dx ** 2 + dy ** 2) ** 0.5
 
-            # Apply string force if stretched beyond rest length
-            if dist > STRING_DISTANCE and dist > 0:
-                direction = vec(dx, dy).normalize()
-                stretch = dist - STRING_DISTANCE
-                self.vel += direction * PLAYER_STRING_SPRING_K * stretch
+        # Apply string force if stretched beyond rest length
+        if dist > STRING_DISTANCE and dist > 0:
+            direction = vec(dx, dy).normalize()
+            stretch = dist - STRING_DISTANCE
+            self.vel += direction * PLAYER_STRING_SPRING_K * stretch
 
-        self.pos.x += self.vel.x * self.game.dt # moves player horizontally 
+        self.pos.x += self.vel.x * self.game.dt # moves player horizontally
         self.hit_rect.centerx = self.pos.x # Update hit rect for horizontal movement
         collide_with_walls(self, self.game.all_walls, 'x') # Check for horizontal collisions
+        collide_with_player(self, self.game.player2, 'x')
         self.pos.x = self.hit_rect.centerx # Update player position after horizontal collisions
 
         self.on_ground = False # Assume player is in the air until we check for collisions
@@ -134,6 +156,7 @@ class Player(Sprite):
         self.pos.y += self.vel.y * self.game.dt # moves player vertically
         self.hit_rect.centery = self.pos.y # Update hit rect for vertical movement
         collide_with_walls(self, self.game.all_walls, 'y')
+        collide_with_player(self, self.game.player2, 'y')
 
 
         # Update player position after vertical collisions
@@ -144,9 +167,9 @@ class Player(Sprite):
         self.rect.center = self.hit_rect.center # Update sprite rect to match hit rect
 
 
-class Mob(Sprite): # another player that is controlled by the player
+class Player2(Sprite): # another player that is controlled by the player
     def __init__(self, game, x, y):
-        self.groups = game.all_sprites, game.all_mobs
+        self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE))
@@ -162,7 +185,7 @@ class Mob(Sprite): # another player that is controlled by the player
         keys = pg.key.get_pressed()
         if keys[pg.K_LEFT]:  self.vel.x = -PLAYER_SPEED
         if keys[pg.K_RIGHT]: self.vel.x = PLAYER_SPEED
-        if keys[pg.K_UP] and self.on_ground:self.vel.y = -JUMP_FORCE, self.on_ground = False
+        if keys[pg.K_UP] and self.on_ground: self.vel.y = -JUMP_FORCE; self.on_ground = False
 
         
     def update(self):
@@ -181,6 +204,7 @@ class Mob(Sprite): # another player that is controlled by the player
         self.pos.x += self.vel.x * self.game.dt
         self.hit_rect.centerx = self.pos.x
         collide_with_walls(self, self.game.all_walls, 'x')
+        collide_with_player(self, self.game.player, 'x')
         self.pos.x = self.hit_rect.centerx
 
         self.on_ground = False
@@ -188,6 +212,7 @@ class Mob(Sprite): # another player that is controlled by the player
         self.pos.y += self.vel.y * self.game.dt
         self.hit_rect.centery = self.pos.y
         collide_with_walls(self, self.game.all_walls, 'y')
+        collide_with_player(self, self.game.player, 'y')
         self.pos.y = self.hit_rect.centery
         if was_falling and self.vel.y == 0:
             self.on_ground = True
@@ -209,6 +234,15 @@ class Wall(Sprite):
 
     def update(self):
         pass
+
+
+
+
+
+
+
+
+
 
 
 class Projectile(Sprite):
