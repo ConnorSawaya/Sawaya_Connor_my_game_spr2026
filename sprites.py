@@ -132,6 +132,8 @@ class Player(Sprite):
         self.animate()
         self.get_keys()
         self.vel.y += GRAVITY * self.game.dt # Apply gravity to vertical velocity
+        if self.vel.y > MAX_FALL_SPEED:
+            self.vel.y = MAX_FALL_SPEED
 
         # Apply string force from player2 to the player
         player2 = self.game.player2
@@ -191,6 +193,8 @@ class Player2(Sprite): # another player that is controlled by the player
     def update(self):
         self.get_keys()
         self.vel.y += GRAVITY * self.game.dt
+        if self.vel.y > MAX_FALL_SPEED:
+            self.vel.y = MAX_FALL_SPEED
 
         dx = self.game.player.pos.x - self.pos.x
         dy = self.game.player.pos.y - self.pos.y

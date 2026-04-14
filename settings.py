@@ -5,7 +5,8 @@ STRING_DISTANCE = 180    # Rest length of elastic string (slack below this)
 SHOW_STRING = True       # Toggle to show/hide string
 FRICTION = 0.97      # Velocity multiplier per frame 1 = none, 0 = stop
 
-GRAVITY = 1500           #Gravity strength
+GRAVITY = 800           #Gravity strength
+MAX_FALL_SPEED = 800     # Terminal velocity to prevent tunneling through floors
 
 STRING_SPRING_K = 0.18   # How hard the string pulls when its stretched to far
 PLAYER_STRING_SPRING_K = 2.0  # How hard the string pulls the player back when stretched

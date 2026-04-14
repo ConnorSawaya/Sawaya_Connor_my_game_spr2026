@@ -66,22 +66,28 @@ class line(Sprite): # Class For string between player and player2
     def draw_string_between_player_and_player2(surface, game): # Method to draw string between player and player2
         if not hasattr(game, 'player') or not hasattr(game, 'player2'): # Check if player and player2 exist
             return
-        if not SHOW_STRING:
+        if not SHOW_STRING: # If toggle for showing string is off,
             return
+      
+        player = game.player # sets up player variable 
+        player2 = game.player2 # sets up player2 variable
 
-        player = game.player
-        player2 = game.player2 # Assuming player2 is the player2
-        dx = player.pos.x - player2.pos.x
-        dy = player.pos.y - player2.pos.y
-        dist = (dx ** 2 + dy ** 2) ** 0.5
+        # Player pos and getting distance between player and player2 for string calculations
+        dx = player.pos.x - player2.pos.x # gets the distance from the plaeyer 1 to player 2 in x and y direction 
+        dy = player.pos.y - player2.pos.y # gets the distance from the plaeyer 1 to player 2 in x and y direction
+        dist = (dx ** 2 + dy ** 2) ** 0.5 # Calcsulates the actual distance using pythagorean theorem
 
-        stretch = max(0, dist - STRING_DISTANCE)
-        t = min(1.0, stretch / STRING_DISTANCE)
-        r = int(255 * t)
-        g = int(255 * (1 - t))
-        color = (r, g, 0)
-        thickness = 2 + int(t * 3)
 
-        player_screen = game.camera.apply(player).center
-        player2_screen = game.camera.apply(player2).center
-        pg.draw.line(surface, color, player_screen, player2_screen, thickness)
+        stretch = max(0, dist - STRING_DISTANCE) # checks how much the string is stretched beyond its rest length
+        t = min(1.0, stretch / STRING_DISTANCE) #  Normalizes it to a value from 0-1 for later color and thickness chaange 
+
+        r = int(255 * t) # Changes Color to more red when tis stretched more
+        g = int(255 * (1 - t)) # Changes Color to more green when tis stretched less
+        color = (r, g, 0) # Color changes
+
+        thickness = 2 + int(t * 3) # Thickness changes based on stretch
+
+        player_screen = game.camera.apply(player).center # Gets pos of player and player2 on screen
+        player2_screen = game.camera.apply(player2).center # Gets pos of player and player2 on screen
+
+        pg.draw.line(surface, color, player_screen, player2_screen, thickness) # Draws the actual line
