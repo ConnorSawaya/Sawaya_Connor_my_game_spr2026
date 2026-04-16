@@ -169,6 +169,8 @@ class Player(Sprite):
         self.rect.center = self.hit_rect.center # Update sprite rect to match hit rect
 
 
+
+
 class Player2(Sprite): # another player that is controlled by the player
     def __init__(self, game, x, y):
         self.groups = game.all_sprites
@@ -204,24 +206,26 @@ class Player2(Sprite): # another player that is controlled by the player
             direction = vec(dx, dy).normalize()
             stretch = dist - STRING_DISTANCE
             self.vel += direction * STRING_SPRING_K * stretch
-
+        # Applys Slingshot Force
         self.pos.x += self.vel.x * self.game.dt
         self.hit_rect.centerx = self.pos.x
         collide_with_walls(self, self.game.all_walls, 'x')
         collide_with_player(self, self.game.player, 'x')
         self.pos.x = self.hit_rect.centerx
-
-        self.on_ground = False
-        was_falling = self.vel.y > 0
-        self.pos.y += self.vel.y * self.game.dt
-        self.hit_rect.centery = self.pos.y
+        # Applys Slingshot Force
+        self.on_ground = False # Assume player is in the air until we check for collisions
+        was_falling = self.vel.y > 0 # checks for falling player
+        self.pos.y += self.vel.y * self.game.dt # moves player vertically
+        self.hit_rect.centery = self.pos.y # Update hit rect for vertical movement
+        # Check for vertical collisions with walls and player
         collide_with_walls(self, self.game.all_walls, 'y')
         collide_with_player(self, self.game.player, 'y')
         self.pos.y = self.hit_rect.centery
-        if was_falling and self.vel.y == 0:
+
+        if was_falling and self.vel.y == 0: # checks for landing player
             self.on_ground = True
 
-        self.rect.center = self.hit_rect.center
+        self.rect.center = self.hit_rect.center  # Update sprite rect to match hit rect
 
 
 class Wall(Sprite):

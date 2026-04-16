@@ -22,8 +22,9 @@ class Game:
 
     def load_data(self):
         self.game_dir = path.dirname(__file__)
-        self.script_dir = self.game_dir
-        self.img_dir = path.join(self.game_dir, 'images')
+
+        self.background = pg.image.load(path.join(self.img_dir, 'background.png')).convert()
+        self.background = pg.transform.scale(self.background, (WIDTH, HEIGHT))
         try:
             self.sprite_sheet = Spritesheet(path.join(self.img_dir, 'sprite_sheet.png'))
         except Exception:
@@ -31,7 +32,7 @@ class Game:
 
         map_path = path.join(self.game_dir, 'level1.txt')
         with open(map_path, 'r') as f:
-            self.map = [line.strip() for line in f if line.strip()]
+            self.map = [line.rstrip('\n') for line in f]
 
 
         self.camera = Camera(len(self.map[0]) * TILESIZE, len(self.map) * TILESIZE)
@@ -90,7 +91,7 @@ class Game:
             self.camera.update(self.player) # Update camera to follow player
 
     def draw(self):
-        self.screen.fill(SKY_BLUE) # Sets background color to blue
+        self.screen.blit(self.background, (0, 0)) # Background Code From Chatgpt prompt was basically asking how to change the blue to a image
 
         self.camera.draw_world(self.screen, self.all_sprites) # Draw the world using the camera's draw_world method
 
