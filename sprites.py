@@ -1,6 +1,7 @@
 from os import path
 import pygame as pg
 from pygame.sprite import Sprite
+import settings
 from settings import *
 
 
@@ -54,6 +55,33 @@ def collide_with_walls(sprite, group, direction):
         sprite.hit_rect.centery = sprite.pos.y
 
 
+def handle_water(sprite, up_pressed, down_pressed):
+    if not hasattr(sprite.game, "water") or not sprite.game.water.is_touching(sprite):
+        return False
+
+    water_top = sprite.game.water.surface_y()
+    depth = max(0, sprite.hit_rect.bottom - water_top)
+    depth_ratio = min(1, depth / TILESIZE)
+
+    # Water slows movement and pushes you upward more when you are deeper.
+    sprite.vel.x *= 0.94
+    sprite.vel.y *= 0.98
+    sprite.vel.y += 120 * sprite.game.dt
+    sprite.vel.y -= 260 * depth_ratio * sprite.game.dt
+
+    if up_pressed:
+        sprite.vel.y -= 320 * sprite.game.dt
+    elif down_pressed:
+        sprite.vel.y += 220 * sprite.game.dt
+
+    if sprite.vel.y < -180:
+        sprite.vel.y = -180
+    if sprite.vel.y > 220:
+        sprite.vel.y = 220
+
+    return True
+
+
 class Player(Sprite):
     def __init__(self, game, x, y, controls=None, color=WHITE):
         self.groups = game.all_sprites
@@ -83,15 +111,25 @@ class Player(Sprite):
             self.moving_frames = [self.image]
 
     def get_keys(self):
-        self.vel.x = 0
         keys = pg.key.get_pressed()
+        in_water = hasattr(self.game, "water") and self.game.water.is_touching(self)
+        move_speed = PLAYER_SPEED * 0.55 if in_water else PLAYER_SPEED
+
+        self.vel.x = 0
         if keys[self.controls["left"]]:
-            self.vel.x = -PLAYER_SPEED
+            self.vel.x = -move_speed
         if keys[self.controls["right"]]:
-            self.vel.x = PLAYER_SPEED
-        if keys[self.controls["jump"]] and self.on_ground:
+            self.vel.x = move_speed
+
+        if handle_water(self, keys[self.controls["jump"]], keys[pg.K_s]):
+            pass
+        elif keys[self.controls["jump"]] and self.on_ground:
             self.vel.y = -JUMP_FORCE
             self.on_ground = False
+            if settings.jump_sound:
+                settings.jump_sound.set_volume(0.5)
+                settings.jump_sound.play()
+            
         self.moving = self.vel.x != 0
 
     def load_image(self):
@@ -111,16 +149,16 @@ class Player(Sprite):
 
     def animate(self):
         now = pg.time.get_ticks()
-        if not self.jumping and not self.moving:
-            if now - self.last_update > 3500:
+        if not self.jumping and not self.moving: # Standing still check
+            if now - self.last_update > 3500: 
                 self.last_update = now
                 self.current_frame = (self.current_frame + 1) % len(self.standing_frames)
                 bottom = self.rect.bottom
                 self.image = self.standing_frames[self.current_frame]
                 self.rect = self.image.get_rect()
                 self.rect.bottom = bottom
-        elif self.moving:
-            if now - self.last_update > 350:
+        elif self.moving: # Animate moving frames
+            if now - self.last_update > 350: 
                 self.last_update = now
                 self.current_frame = (self.current_frame + 1) % len(self.moving_frames)
                 bottom = self.rect.bottom
@@ -131,7 +169,8 @@ class Player(Sprite):
     def update(self):
         self.animate()
         self.get_keys()
-        self.vel.y += GRAVITY * self.game.dt # Apply gravity to vertical velocity
+        if not (hasattr(self.game, "water") and self.game.water.is_touching(self)):
+            self.vel.y += GRAVITY * self.game.dt # Apply gravity to vertical velocity
         if self.vel.y > MAX_FALL_SPEED:
             self.vel.y = MAX_FALL_SPEED
 
@@ -185,16 +224,22 @@ class Player2(Sprite): # another player that is controlled by the player
         self.on_ground = False
 
     def get_keys(self): # Checks key input 
-        self.vel.x = 0
         keys = pg.key.get_pressed()
-        if keys[pg.K_LEFT]:  self.vel.x = -PLAYER_SPEED
-        if keys[pg.K_RIGHT]: self.vel.x = PLAYER_SPEED
-        if keys[pg.K_UP] and self.on_ground: self.vel.y = -JUMP_FORCE; self.on_ground = False
+        in_water = hasattr(self.game, "water") and self.game.water.is_touching(self)
+        move_speed = PLAYER_SPEED * 0.55 if in_water else PLAYER_SPEED
+
+        self.vel.x = 0
+        if keys[pg.K_LEFT]:  self.vel.x = -move_speed
+        if keys[pg.K_RIGHT]: self.vel.x = move_speed
+        if handle_water(self, keys[pg.K_UP], keys[pg.K_DOWN]):
+            pass
+        elif keys[pg.K_UP] and self.on_ground: self.vel.y = -JUMP_FORCE; self.on_ground = False
 
         
     def update(self):
         self.get_keys()
-        self.vel.y += GRAVITY * self.game.dt
+        if not (hasattr(self.game, "water") and self.game.water.is_touching(self)):
+            self.vel.y += GRAVITY * self.game.dt
         if self.vel.y > MAX_FALL_SPEED:
             self.vel.y = MAX_FALL_SPEED
 
@@ -234,7 +279,10 @@ class Wall(Sprite):
         Sprite.__init__(self, self.groups)
         self.game = game
         self.image = pg.Surface((TILESIZE, TILESIZE))
-        self.image = pg.image.load(path.join(self.game.img_dir, 'wall.png')).convert()
+        wall_path = path.join(self.game.img_dir, 'wall.png')
+        if not path.exists(wall_path):
+            wall_path = path.join(self.game.img_dir, 'Wall.png')
+        self.image = pg.image.load(wall_path).convert()
         self.rect = self.image.get_rect()
         self.vel = vec(0, 0)
         self.pos = vec(x, y) * TILESIZE

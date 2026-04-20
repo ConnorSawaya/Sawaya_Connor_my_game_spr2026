@@ -14,6 +14,8 @@ from utils import *
 class Game:
     def __init__(self):
         pg.init()
+        load_game_sounds()
+        
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
@@ -22,9 +24,16 @@ class Game:
 
     def load_data(self):
         self.game_dir = path.dirname(__file__)
+        self.img_dir = IMG_DIR
 
-        self.background = pg.image.load(path.join(self.img_dir, 'background.png')).convert()
-        self.background = pg.transform.scale(self.background, (WIDTH, HEIGHT))
+        background_path = path.join(self.img_dir, 'background.png')
+        try:
+            self.background = pg.image.load(background_path).convert()
+            self.background = pg.transform.scale(self.background, (WIDTH, HEIGHT))
+        except pg.error:
+            # Fallback if the image file is the wrong format or cannot be loaded.
+            self.background = pg.Surface((WIDTH, HEIGHT))
+            self.background.fill(SKY_BLUE)
         try:
             self.sprite_sheet = Spritesheet(path.join(self.img_dir, 'sprite_sheet.png'))
         except Exception:
@@ -43,6 +52,7 @@ class Game:
         self.all_sprites = pg.sprite.Group()
         self.all_walls = pg.sprite.Group()
         self.all_projectiles = pg.sprite.Group()
+        self.water = Water(self.camera.width, self.camera.height)
 
         for row, tiles in enumerate(self.map):
             for col, tile in enumerate(tiles):
@@ -86,6 +96,7 @@ class Game:
         pass
 
     def update(self):
+        self.water.update(self.dt, self)
         self.all_sprites.update()
         if hasattr(self, 'player'): # Only update camera if player exists
             self.camera.update(self.player) # Update camera to follow player
@@ -94,6 +105,7 @@ class Game:
         self.screen.blit(self.background, (0, 0)) # Background Code From Chatgpt prompt was basically asking how to change the blue to a image
 
         self.camera.draw_world(self.screen, self.all_sprites) # Draw the world using the camera's draw_world method
+        self.water.draw(self.screen, self.camera)
 
         if hasattr(self, 'player') and hasattr(self, 'player2'):
             line.draw_string_between_player_and_player2(self.screen, self) # Draw String methond

@@ -1,5 +1,7 @@
+import math
 import pygame as pg
 from pygame.sprite import Sprite
+import settings
 from settings import *
 
 
@@ -91,3 +93,67 @@ class line(Sprite): # Class For string between player and player2
         player2_screen = game.camera.apply(player2).center # Gets pos of player and player2 on screen
 
         pg.draw.line(surface, color, player_screen, player2_screen, thickness) # Draws the actual line
+
+
+class Water: # Made my Codex- Prompt was asking for a pygame python code for rising water that can kill the player if they touch it, and also has a wave effect on top. I also added a little bit of code to make it so it can be used in the game and interact with the player.
+    def __init__(self, world_width, world_height):
+        self.world_width = world_width
+        self.world_height = world_height
+        self.height = 0
+        self.rise_speed = 18
+        self.color = (40, 120, 220, 90)
+        self.wave_color = (190, 220, 255, 150)
+        self.touching = False
+
+    def update(self, dt, game):
+        # Slowly raise the water using delta time.
+        self.height = min(self.world_height, self.height + self.rise_speed * dt)
+
+        water_top = self.world_height - self.height
+        hit = False
+
+        # Check if either player touches the water in the world.
+        if hasattr(game, "player"):
+            if game.player.rect.bottom >= water_top:
+                hit = True
+        if hasattr(game, "player2"):
+            if game.player2.rect.bottom >= water_top:
+                hit = True
+
+        if hit and not self.touching:
+            if settings.splash_sound:
+                settings.splash_sound.play()
+            print("hit")
+        self.touching = hit
+
+    def is_touching(self, sprite):
+        # Simple check: if the player's feet are below the water line, they are in water.
+        water_top = self.world_height - self.height
+        if hasattr(sprite, "hit_rect"):
+            return sprite.hit_rect.bottom >= water_top
+        return sprite.rect.bottom >= water_top
+
+    def surface_y(self):
+        return self.world_height - self.height
+
+    def draw(self, surface, camera):
+        water_top = self.world_height - self.height
+        water_rect = pg.Rect(0, water_top, self.world_width, self.height)
+        screen_rect = camera.apply_rect(water_rect)
+
+        # Draw on a transparent surface so the water is see-through.
+        water_surface = pg.Surface((WIDTH, HEIGHT), pg.SRCALPHA)
+        pg.draw.rect(water_surface, self.color, screen_rect)
+
+        # Tiny wave line so the top is not perfectly flat.
+        points = []
+        for x in range(0, self.world_width + 1, 20):
+            wave_y = water_top + math.sin(pg.time.get_ticks() * 0.004 + x * 0.03) * 4
+            screen_x = x + camera.camera.x
+            screen_y = wave_y + camera.camera.y
+            points.append((screen_x, screen_y))
+
+        if len(points) > 1:
+            pg.draw.lines(water_surface, self.wave_color, False, points, 2)
+
+        surface.blit(water_surface, (0, 0))

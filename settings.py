@@ -26,8 +26,32 @@ CAMERA_RADIUS = 720 # Radius of camera mask in pixels
 
 
 
-
 script_dir = os.path.dirname(__file__)  # File path of the current script
+IMG_DIR = os.path.join(script_dir, "images")
+SOUND_DIR = os.path.join(script_dir, "sounds")
+
+jump_sound = None
+splash_sound = None
+
+
+def load_sound(filename):
+    sound_path = os.path.join(SOUND_DIR, filename)
+    try:
+        if not pg.mixer.get_init():
+            pg.mixer.init()
+        sound = pg.mixer.Sound(sound_path)
+    except pg.error:
+        sound = None
+    return sound
+
+
+def load_game_sounds():
+    global jump_sound, splash_sound
+    jump_sound = load_sound("jump.wav")
+    splash_sound = load_sound("water_splash.wav")
+
+
+
 
 PLAYER_SPEED = 280  # Player Speed for moving
 JUMP_FORCE = 600    # Upward velocity for jump
