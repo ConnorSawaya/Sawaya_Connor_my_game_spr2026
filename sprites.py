@@ -8,6 +8,10 @@ from settings import *
 vec = pg.math.Vector2
 
 
+def tile_center(x, y):
+    return vec(x + 0.5, y + 0.5) * TILESIZE
+
+
 def collide_hit_rect(one, two):
     return one.hit_rect.colliderect(two.rect)
 
@@ -97,8 +101,10 @@ class Player(Sprite):
         self.image.fill(color)
         self.rect = self.image.get_rect()
         self.vel = vec(0, 0)
-        self.pos = vec(x, y) * TILESIZE
+        self.pos = tile_center(x, y)
         self.hit_rect = PLAYER_HIT_RECT.copy()
+        self.rect.center = self.pos
+        self.hit_rect.center = self.pos
         self.jumping = False
         self.moving = False
         self.on_ground = False
@@ -219,8 +225,10 @@ class Player2(Sprite): # another player that is controlled by the player
         self.image.fill(RED)
         self.rect = self.image.get_rect()
         self.vel = vec(0, 0)
-        self.pos = vec(x, y) * TILESIZE
+        self.pos = tile_center(x, y)
         self.hit_rect = PLAYER_HIT_RECT.copy()
+        self.rect.center = self.pos
+        self.hit_rect.center = self.pos
         self.on_ground = False
 
     def get_keys(self): # Checks key input 
@@ -285,7 +293,7 @@ class Wall(Sprite):
         self.image = pg.image.load(wall_path).convert()
         self.rect = self.image.get_rect()
         self.vel = vec(0, 0)
-        self.pos = vec(x, y) * TILESIZE
+        self.pos = tile_center(x, y)
         self.rect.center = self.pos
 
     def update(self):
