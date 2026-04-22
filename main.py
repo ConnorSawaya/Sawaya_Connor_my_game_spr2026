@@ -6,6 +6,7 @@ Sprite Sheet llama made By CaptainBrosset
 
 import pygame as pg
 from os import path
+import settings
 from settings import *
 from sprites import *
 from utils import *
@@ -14,8 +15,7 @@ from utils import *
 class Game:
     def __init__(self):
         pg.init()
-        load_game_sounds()
-        
+
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         pg.display.set_caption(TITLE)
         self.clock = pg.time.Clock()
@@ -26,16 +26,30 @@ class Game:
         self.game_dir = path.dirname(__file__)
         self.img_dir = IMG_DIR
 
-        background_path = path.join(self.img_dir, 'background.png')
-        try:
-            self.background = pg.image.load(background_path).convert()
-            self.background = pg.transform.scale(self.background, (WIDTH, HEIGHT))
+        try: # sound loading if makes it so if its the wrong format or theres a issue it wont auto crash
+            if not pg.mixer.get_init():
+                pg.mixer.init()
+            settings.jump_sound = pg.mixer.Sound(path.join(SOUND_DIR, "jump.wav"))
         except pg.error:
-            # Fallback if the image file is the wrong format or cannot be loaded.
+            settings.jump_sound = None
+
+        try:
+            if not pg.mixer.get_init():
+                pg.mixer.init()
+            settings.splash_sound = pg.mixer.Sound(path.join(SOUND_DIR, "water_splash.wav"))
+        except pg.error:
+            settings.splash_sound = None
+
+
+        try:
+            self.background = pg.image.load(self.img_dir + '/background.png').convert()
+            self.background = pg.transform.scale(self.background, (WIDTH, HEIGHT))
+        except pg.error: # if theres a error it will load the solid blue background instead of a crash
             self.background = pg.Surface((WIDTH, HEIGHT))
             self.background.fill(SKY_BLUE)
+            print(f"background error {pg.error}")
         try:
-            self.sprite_sheet = Spritesheet(path.join(self.img_dir, 'sprite_sheet.png'))
+            self.sprite_sheet = Spritesheet(path.join(self.img_dir, 'sprite_sheet.png')) # sprite sheet
         except Exception:
             self.sprite_sheet = None
 
@@ -47,11 +61,12 @@ class Game:
         self.camera = Camera(len(self.map[0]) * TILESIZE, len(self.map) * TILESIZE)
         print('data is loaded')
 
-    def new(self):
-        self.load_data()
-        self.all_sprites = pg.sprite.Group()
+    def new(self): # Start a new game
+        self.load_data() # loads all data first of images and sounds and map 
+        #loading sprites
+        self.all_sprites = pg.sprite.Group() 
         self.all_walls = pg.sprite.Group()
-        self.all_projectiles = pg.sprite.Group()
+
         self.water = Water(self.camera.width, self.camera.height)
 
         for row, tiles in enumerate(self.map):
@@ -59,13 +74,7 @@ class Game:
                 if tile == '1':
                     Wall(self, col, row)
                 if tile == 'P':
-                    self.player = Player(
-                        self,
-                        col,
-                        row,
-                        controls={"left": pg.K_a, "right": pg.K_d, "jump": pg.K_w},
-                        color=WHITE,
-                    )
+                    self.player = Player(self, col, row)
                 if tile == 'M':
                     self.player2 = Player2(self, col, row)
         self.run()

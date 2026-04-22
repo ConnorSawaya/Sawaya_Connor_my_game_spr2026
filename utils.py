@@ -43,6 +43,10 @@ class Camera:
     def update(self, target):
         x = -target.rect.centerx + int(WIDTH / 2)
         y = -target.rect.centery + int(HEIGHT / 2)
+        x = min(0, x)
+        y = min(0, y)
+        x = max(-(self.width - WIDTH), x)
+        y = max(-(self.height - HEIGHT), y)
         self.camera = pg.Rect(x, y, self.width, self.height)
 
 
@@ -95,25 +99,31 @@ class line(Sprite): # Class For string between player and player2
         pg.draw.line(surface, color, player_screen, player2_screen, thickness) # Draws the actual line
 
 
+
+
 class Water: # Made my Codex- Prompt was asking for a pygame python code for rising water that can kill the player if they touch it, and also has a wave effect on top. I also added a little bit of code to make it so it can be used in the game and interact with the player.
     def __init__(self, world_width, world_height):
         self.world_width = world_width
         self.world_height = world_height
         self.height = 0
-        self.rise_speed = 18
+        self.rise_speed = 6
+        self.delay_ms = 5000
+        self.start_time = pg.time.get_ticks()
         self.color = (40, 120, 220, 90)
         self.wave_color = (190, 220, 255, 150)
         self.touching = False
 
     def update(self, dt, game):
-        # Slowly raise the water using delta time.
-        self.height = min(self.world_height, self.height + self.rise_speed * dt)
+        # Give the players a short head start before the water begins to rise.
+        if pg.time.get_ticks() - self.start_time >= self.delay_ms:
+            self.height = min(self.world_height, self.height + self.rise_speed * dt)
 
         water_top = self.world_height - self.height
-        hit = False
+        hit = False # hit variable for water check
 
         # Check if either player touches the water in the world.
-        if hasattr(game, "player"):
+
+        if hasattr(game, "player"): # checks if player exits 
             if game.player.rect.bottom >= water_top:
                 hit = True
         if hasattr(game, "player2"):
@@ -126,7 +136,7 @@ class Water: # Made my Codex- Prompt was asking for a pygame python code for ris
             print("hit")
         self.touching = hit
 
-    def is_touching(self, sprite):
+    def is_touching(self, sprite): # methond to check for touching
         # Simple check: if the player's feet are below the water line, they are in water.
         water_top = self.world_height - self.height
         if hasattr(sprite, "hit_rect"):
@@ -136,7 +146,7 @@ class Water: # Made my Codex- Prompt was asking for a pygame python code for ris
     def surface_y(self):
         return self.world_height - self.height
 
-    def draw(self, surface, camera):
+    def draw(self, surface, camera): # draw method for the water, it draws a rectangle for the water and then a wave line on top of it
         water_top = self.world_height - self.height
         water_rect = pg.Rect(0, water_top, self.world_width, self.height)
         screen_rect = camera.apply_rect(water_rect)
@@ -145,15 +155,15 @@ class Water: # Made my Codex- Prompt was asking for a pygame python code for ris
         water_surface = pg.Surface((WIDTH, HEIGHT), pg.SRCALPHA)
         pg.draw.rect(water_surface, self.color, screen_rect)
 
-        # Tiny wave line so the top is not perfectly flat.
+        # Tiny wave line so the top is not perfectly flat
         points = []
-        for x in range(0, self.world_width + 1, 20):
+        for x in range(0, self.world_width + 1, 20): # Sample points every 20 pixels across the width of the water
             wave_y = water_top + math.sin(pg.time.get_ticks() * 0.004 + x * 0.03) * 4
-            screen_x = x + camera.camera.x
-            screen_y = wave_y + camera.camera.y
+            screen_x = x + camera.camera.x 
+            screen_y = wave_y + camera.camera.y 
             points.append((screen_x, screen_y))
-
-        if len(points) > 1:
+ 
+        if len(points) > 1: # only draw the wave line if we have enough points
             pg.draw.lines(water_surface, self.wave_color, False, points, 2)
 
-        surface.blit(water_surface, (0, 0))
+        surface.blit(water_surface, (0, 0)) # draws the water surface on the main screen
