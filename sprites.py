@@ -295,7 +295,7 @@ class Player2(Sprite): # another player that is controlled by the player
         self.rect.center = self.hit_rect.center  # Update sprite rect to match hit rect
 
 
-class Wall(Sprite):
+class Wall(Sprite): # wall class 
     def __init__(self, game, x, y):
         self.groups = game.all_sprites, game.all_walls
         Sprite.__init__(self, self.groups)

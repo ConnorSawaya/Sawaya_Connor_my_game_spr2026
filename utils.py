@@ -41,6 +41,7 @@ class Camera:
         surface.blit(mask, (0, 0))
 
     def update(self, target):
+        # center the camera on player 1
         x = -target.rect.centerx + int(WIDTH / 2)
         y = -target.rect.centery + int(HEIGHT / 2)
         x = min(0, x)
@@ -105,59 +106,71 @@ class Water: # Made my Codex- Prompt was asking for a pygame python code for ris
     def __init__(self, world_width, world_height):
         self.world_width = world_width
         self.world_height = world_height
-        self.height = 0
-        self.rise_speed = 6
-        self.delay_ms = 5000
+        self.water_height = WATER_HEIGHT
+        self.height = WATER_HEIGHT
+        self.water_top = self.world_height - self.height
+        self.rise_speed = WATER_RISE_SPEED
+        self.delay_ms = WATER_RISE_DELAY
         self.start_time = pg.time.get_ticks()
         self.color = (40, 120, 220, 90)
         self.wave_color = (190, 220, 255, 150)
         self.touching = False
 
-    def update(self, dt, game):
-        # Give the players a short head start before the water begins to rise.
-        if pg.time.get_ticks() - self.start_time >= self.delay_ms:
+    def update(self, dt, game): 
+        hit = False # hit variable for water check
+        # Starting delay of water rising for time to go upwards before water gets there
+
+        if pg.time.get_ticks() - self.start_time >= self.delay_ms: #Check for delay to start rising
             self.height = min(self.world_height, self.height + self.rise_speed * dt)
 
-        water_top = self.world_height - self.height
-        hit = False # hit variable for water check
+        # Water Top is used for checking if player is touching the water by using the top cords of the current hieght of the rising water
+        self.water_top = self.world_height - self.height
 
-        # Check if either player touches the water in the world.
-
-        if hasattr(game, "player"): # checks if player exits 
-            if game.player.rect.bottom >= water_top:
-                hit = True
-        if hasattr(game, "player2"):
-            if game.player2.rect.bottom >= water_top:
+        if hasattr(game, "player"): # checks if player exists before checking for water collision(I think i had issues where hte player would spaw after so i found out this might help)
+            if game.player.rect.bottom >= self.water_top: # checks if player is touching the water
                 hit = True
 
-        if hit and not self.touching:
-            if settings.splash_sound:
-                settings.splash_sound.play()
+        if hasattr(game, "player2"): # checks if player2 exists before checking for water collision(I think i had issues where hte player would spaw after so i found out this might help)
+            if game.player2.rect.bottom >= self.water_top: # checks if player2 is touching the water
+                hit = True
+
+
+
+        if hit and not self.touching: # The player laying in water check, for playing sound 
+            if settings.splash_sound: # checks for splash sound in setting before playing
+                settings.splash_sound.play()  # plays the splash sound when the player enters the water
             print("hit")
-        self.touching = hit
+        self.touching = hit 
+        return self.water_top
 
-    def is_touching(self, sprite): # methond to check for touching
+    def is_touching(self, sprite, water_top=None): # methond to check for touching
         # Simple check: if the player's feet are below the water line, they are in water.
-        water_top = self.world_height - self.height
-        if hasattr(sprite, "hit_rect"):
+        if water_top is None:
+            water_top = self.water_top
+
+        if hasattr(sprite, "hit_rect"): # 
             return sprite.hit_rect.bottom >= water_top
         return sprite.rect.bottom >= water_top
 
     def surface_y(self):
-        return self.world_height - self.height
+        return self.water_top # returns the y cord of top of water
 
-    def draw(self, surface, camera): # draw method for the water, it draws a rectangle for the water and then a wave line on top of it
-        water_top = self.world_height - self.height
-        water_rect = pg.Rect(0, water_top, self.world_width, self.height)
-        screen_rect = camera.apply_rect(water_rect)
+    def draw(self, surface, camera, water_top=None): # draw method for the water, it draws a rectangle for the water and then a wave line on top of it
+        if water_top is None:
+            water_top = self.water_top
+        
+        water_rect = pg.Rect(0, water_top, self.world_width, self.height) 
+        screen_rect = camera.apply_rect(water_rect) # applies the camera rect to water rect so it moves at the same speed as camera
 
         # Draw on a transparent surface so the water is see-through.
         water_surface = pg.Surface((WIDTH, HEIGHT), pg.SRCALPHA)
         pg.draw.rect(water_surface, self.color, screen_rect)
 
         # Tiny wave line so the top is not perfectly flat
-        points = []
+        points = [] # lists for all the wave points to draw the wave line
+
         for x in range(0, self.world_width + 1, 20): # Sample points every 20 pixels across the width of the water
+            # calculate the wave height ( i got NO idea how this works code jst made this.)
             wave_y = water_top + math.sin(pg.time.get_ticks() * 0.004 + x * 0.03) * 4
             screen_x = x + camera.camera.x 
             screen_y = wave_y + camera.camera.y 

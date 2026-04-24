@@ -26,34 +26,40 @@ class Game:
         self.game_dir = path.dirname(__file__)
         self.img_dir = IMG_DIR
 
-        try: # sound loading if makes it so if its the wrong format or theres a issue it wont auto crash
+        ###################---Sound Loading---###################
+        try: # jump sound loading
             if not pg.mixer.get_init():
                 pg.mixer.init()
             settings.jump_sound = pg.mixer.Sound(path.join(SOUND_DIR, "jump.wav"))
-        except pg.error:
+        except pg.error: # if theres a error loading in sound will set it to none so it wont crash
             settings.jump_sound = None
-
-        try:
+        try: # splash sound loading
             if not pg.mixer.get_init():
                 pg.mixer.init()
             settings.splash_sound = pg.mixer.Sound(path.join(SOUND_DIR, "water_splash.wav"))
-        except pg.error:
+        except pg.error:# if theres a error loading in sound will set it to none so it wont crash
             settings.splash_sound = None
+        ###################---Sound Loading---###################
 
 
-        try:
+        ###################---Image Loading---###################
+        try: # background loading 
             self.background = pg.image.load(self.img_dir + '/background.png').convert()
             self.background = pg.transform.scale(self.background, (WIDTH, HEIGHT))
         except pg.error: # if theres a error it will load the solid blue background instead of a crash
             self.background = pg.Surface((WIDTH, HEIGHT))
             self.background.fill(SKY_BLUE)
             print(f"background error {pg.error}")
-        try:
-            self.sprite_sheet = Spritesheet(path.join(self.img_dir, 'sprite_sheet.png')) # sprite sheet
+
+        try: # sprite sheet loading
+            self.sprite_sheet = Spritesheet(path.join(self.img_dir, 'sprite_sheet.png')) 
         except Exception:
             self.sprite_sheet = None
 
-        map_path = path.join(self.game_dir, 'level1.txt')
+        ###################---Image Loading---###################
+
+        # Map loading 
+        map_path = path.join(self.game_dir, 'level1.txt') # loads the level 1
         with open(map_path, 'r') as f:
             self.map = [line.rstrip('\n') for line in f]
 
@@ -94,13 +100,6 @@ class Game:
                 self.running = False
 
 
-
-            if event.type == pg.KEYDOWN and event.key == pg.K_t: # Checks for t press
-                import settings
-                settings.SHOW_STRING = not settings.SHOW_STRING # Check toggle for showing the string between player and player2
-
-
-
     def quit(self):
         pass
 
@@ -116,7 +115,7 @@ class Game:
         self.camera.draw_world(self.screen, self.all_sprites) # Draw the world using the camera's draw_world method
         self.water.draw(self.screen, self.camera)
 
-        if hasattr(self, 'player') and hasattr(self, 'player2'):
+        if hasattr(self, 'player') and hasattr(self, 'player2'): # check if both players exist 
             line.draw_string_between_player_and_player2(self.screen, self) # Draw String methond
 
         if hasattr(self, 'player'): 

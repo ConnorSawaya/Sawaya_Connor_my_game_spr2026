@@ -23,7 +23,10 @@ TILESIZE = 32
 BORDER_THICKNESS = 2
 CAMERA_RADIUS = 1200 # Radius of camera mask in pixels
 
-
+#Water Settings
+WATER_RISE_SPEED = 10
+WATER_HEIGHT = 0
+WATER_RISE_DELAY = 8000
 
 
 script_dir = os.path.dirname(__file__)  # File path of the current script
@@ -32,7 +35,7 @@ SOUND_DIR = os.path.join(script_dir, "sounds") # File path of the sounds folder
 
 
 
-PLAYER_SPEED = 250  # Player Speed for moving
+PLAYER_SPEED = 220  # Player Speed for moving
 JUMP_FORCE = 500    # Upward velocity for jump
 
 PLAYER_HIT_RECT = pg.Rect(0, 0, TILESIZE, TILESIZE)  # Player Hitbox 
