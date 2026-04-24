@@ -102,7 +102,9 @@ class line(Sprite): # Class For string between player and player2
 
 
 
-class Water: # Made my Codex- Prompt was asking for a pygame python code for rising water that can kill the player if they touch it, and also has a wave effect on top. I also added a little bit of code to make it so it can be used in the game and interact with the player.
+#                  Made my Codex- Prompt was asking for a pygame python code for rising water that can kill the player if they touch it, and also has a wave effect on top. I also added a little bit of code to make it so it can be used in the game and interact with the player.
+
+class Water: 
     def __init__(self, world_width, world_height):
         self.world_width = world_width
         self.world_height = world_height
@@ -133,9 +135,6 @@ class Water: # Made my Codex- Prompt was asking for a pygame python code for ris
         if hasattr(game, "player2"): # checks if player2 exists before checking for water collision(I think i had issues where hte player would spaw after so i found out this might help)
             if game.player2.rect.bottom >= self.water_top: # checks if player2 is touching the water
                 hit = True
-
-
-
         if hit and not self.touching: # The player laying in water check, for playing sound 
             if settings.splash_sound: # checks for splash sound in setting before playing
                 settings.splash_sound.play()  # plays the splash sound when the player enters the water
