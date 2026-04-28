@@ -1,4 +1,5 @@
 from os import path
+import random
 import pygame as pg
 from pygame.sprite import Sprite
 import settings
@@ -119,6 +120,7 @@ class Player(Sprite):
         self.jumping = False
         self.moving = False
         self.on_ground = False
+        self.congrats_played = False
         self.last_update = 0
         self.current_frame = 0
         if self.sprite_sheet:
@@ -188,6 +190,15 @@ class Player(Sprite):
         self.animate()
         self.get_keys()
         apply_vertical_physics(self) # applys gravity and water physics to player
+        
+        if self.hit_rect.top <= CONGRATS_SOUND_THRESHOLD and not self.congrats_played:
+            if settings.congrats_sound:
+                settings.congrats_sound.set_volume(0.5)
+                settings.congrats_sound.play()
+            # confetti particles
+            for _ in range(40):
+                self.game.confetti.append(Confetti(self.game, self.rect.centerx, self.rect.centery))
+            self.congrats_played = True
 
         # Apply string force from player2 to the player
         player2 = self.game.player2
@@ -314,4 +325,26 @@ class Wall(Sprite): # wall class
         pass
 
 
+class Confetti(Sprite): # Confetti class for when player wins
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((4, 4))
+        self.image.fill(BLACK) 
+        self.image.set_colorkey(BLACK)
+        self.image.fill(random.choice([RED, YELLOW, GREEN, WHITE, SKY_BLUE])) # makes the confetti random colors
+        self.rect = self.image.get_rect()
+        self.pos = vec(x, y)
+        self.vel = vec(random.uniform(-180, 180), random.uniform(-260, -80)) # random velocity 
+        self.rect.center = self.pos
+        self.spawn_time = pg.time.get_ticks()
 
+    def update(self):
+        self.vel.y += 500 * self.game.dt # makes the confetti fall down 
+        self.pos += self.vel * self.game.dt # updates pos 
+        self.rect.center = self.pos # updates rec to match pos
+        if pg.time.get_ticks() - self.spawn_time > 1500: # kils the confetti after 1.5 seconds
+            if hasattr(self.game, "confetti") and self in self.game.confetti: # removes confetti if it exists
+                self.game.confetti.remove(self) # removes confetti from the game confetti list
+            self.kill() # kills sprite compeltely

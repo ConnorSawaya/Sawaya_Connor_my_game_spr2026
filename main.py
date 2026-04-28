@@ -39,6 +39,12 @@ class Game:
             settings.splash_sound = pg.mixer.Sound(path.join(SOUND_DIR, "water_splash.wav"))
         except pg.error:# if theres a error loading in sound will set it to none so it wont crash
             settings.splash_sound = None
+        try: # congrats sound loading
+            if not pg.mixer.get_init():
+                pg.mixer.init()
+            settings.congrats_sound = pg.mixer.Sound(path.join(SOUND_DIR, "congrats.wav"))
+        except pg.error: # if theres a error loading in sound will set it to none so it wont crash
+            settings.congrats_sound = None
         ###################---Sound Loading---###################
 
 
@@ -72,6 +78,7 @@ class Game:
         #loading sprites
         self.all_sprites = pg.sprite.Group() 
         self.all_walls = pg.sprite.Group()
+        self.confetti = []
 
         self.water = Water(self.camera.width, self.camera.height)
 

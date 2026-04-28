@@ -169,7 +169,7 @@ class Water:
         points = [] # lists for all the wave points to draw the wave line
 
         for x in range(0, self.world_width + 1, 20): # Sample points every 20 pixels across the width of the water
-            # calculate the wave height ( i got NO idea how this works code jst made this.)
+            # calculate the wave height using sine function 
             wave_y = water_top + math.sin(pg.time.get_ticks() * 0.004 + x * 0.03) * 4
             screen_x = x + camera.camera.x 
             screen_y = wave_y + camera.camera.y 

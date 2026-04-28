@@ -13,6 +13,8 @@ PLAYER_STRING_SPRING_K = 2.0  # How hard the string pulls the player back when s
 SLINGSHOT_FORCE = 10
 MAX_PULL_DIST = 200      # Max String Distence 
 
+CONGRATS_SOUND_THRESHOLD = 32 # Top row y level for congrats sound
+
 
 
 WIDTH = 800
