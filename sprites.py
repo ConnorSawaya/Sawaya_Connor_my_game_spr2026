@@ -120,6 +120,7 @@ class Player(Sprite):
         self.jumping = False
         self.moving = False
         self.on_ground = False
+        self.was_touching_water = False
         self.congrats_played = False
         self.last_update = 0
         self.current_frame = 0
@@ -252,6 +253,7 @@ class Player2(Sprite): # another player that is controlled by the player
         self.rect.center = self.pos
         self.hit_rect.center = self.pos
         self.on_ground = False
+        self.was_touching_water = False
 
     def get_keys(self): # Checks key input 
         keys = pg.key.get_pressed()
@@ -325,7 +327,7 @@ class Wall(Sprite): # wall class
         pass
 
 
-class Confetti(Sprite): # Confetti class for when player wins
+class Confetti(Sprite): # Confetti class for when player wins       
     def __init__(self, game, x, y):
         self.groups = game.all_sprites
         Sprite.__init__(self, self.groups)
@@ -347,4 +349,41 @@ class Confetti(Sprite): # Confetti class for when player wins
         if pg.time.get_ticks() - self.spawn_time > 1500: # kils the confetti after 1.5 seconds
             if hasattr(self.game, "confetti") and self in self.game.confetti: # removes confetti if it exists
                 self.game.confetti.remove(self) # removes confetti from the game confetti list
-            self.kill() # kills sprite compeltely
+            self.kill() # removes the sprite
+
+class Water_particle(Sprite): # Water particle class for touching water   
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((4, 4))
+        self.image.fill(BLACK) 
+        self.image.set_colorkey(BLACK)
+        self.image.fill(random.choice([
+            pg.Color("deepskyblue"),
+            pg.Color("deepskyblue1"),
+            pg.Color("deepskyblue2"),
+            pg.Color("dodgerblue"),
+            pg.Color("dodgerblue1"),
+            pg.Color("dodgerblue2"),
+            pg.Color("skyblue"),
+            pg.Color("skyblue1"),
+            pg.Color("lightskyblue"),
+            pg.Color("lightskyblue1")
+        ]))
+        self.rect = self.image.get_rect()
+        self.pos = vec(x, y)
+        self.vel = vec(random.uniform(-180, 180), random.uniform(-180, 180)) # random velocity 
+        self.rect.center = self.pos
+        self.spawn_time = pg.time.get_ticks()
+
+    def update(self):
+        self.vel.y += 500 * self.game.dt # makes the water particle fall down 
+        self.pos += self.vel * self.game.dt # updates pos 
+        self.rect.center = self.pos # updates rec to match pos
+
+        if pg.time.get_ticks() - self.spawn_time > 5000: # kils the water particle after 0.5 seconds
+            if hasattr(self.game, "water_particles") and self in self.game.water_particles: # removes water particles if they exist
+                self.game.water_particles.remove(self) # removes water particle from the game water particles list
+                self.kill() # removes the sprite
+            self.kill() # removes the sprite

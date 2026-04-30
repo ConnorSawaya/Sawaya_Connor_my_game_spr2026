@@ -79,6 +79,9 @@ class Game:
         self.all_sprites = pg.sprite.Group() 
         self.all_walls = pg.sprite.Group()
         self.confetti = []
+        self.max_health = MAX_HEALTH
+        self.health = self.max_health
+        self.dead_printed = False
 
         self.water = Water(self.camera.width, self.camera.height)
 
@@ -90,6 +93,7 @@ class Game:
                     self.player = Player(self, col, row)
                 if tile == 'M':
                     self.player2 = Player2(self, col, row)
+        self.health_bar = health_bar(self)
         self.run()
 
     def run(self):
@@ -112,6 +116,11 @@ class Game:
 
     def update(self):
         self.water.update(self.dt, self)
+        if self.health < 0:
+            self.health = 0
+        if self.health == 0 and not self.dead_printed:
+            print("dead")
+            self.dead_printed = True
         self.all_sprites.update()
         if hasattr(self, 'player'): # Only update camera if player exists
             self.camera.update(self.player) # Update camera to follow player
@@ -128,6 +137,7 @@ class Game:
         if hasattr(self, 'player'): 
             self.camera.apply_circular_mask(self.screen, self.player)
             self.draw_text("P1: WASD/W   P2: Arrow Keys", 24, WHITE, WIDTH / 2, 15) # Controlls text on screen
+            self.health_bar.draw(self.screen, 20, 50)
 
         pg.display.flip()
 
@@ -145,6 +155,5 @@ if __name__ == "__main__":
 
     while g.running:
         g.new()
-
 
 pg.quit()

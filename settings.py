@@ -29,6 +29,8 @@ CAMERA_RADIUS = 1200 # Radius of camera mask in pixels
 WATER_RISE_SPEED = 10
 WATER_HEIGHT = 0
 WATER_RISE_DELAY = 8000
+MAX_HEALTH = 100
+WATER_DAMAGE = 20
 
 
 script_dir = os.path.dirname(__file__)  # File path of the current script

@@ -1,8 +1,8 @@
 import math
 import pygame as pg
 from pygame.sprite import Sprite
-import settings
 from settings import *
+from sprites import *
 
 
 class Spritesheet:
@@ -11,7 +11,8 @@ class Spritesheet:
 
     def get_image(self, x, y, width, height):
         image = pg.Surface((width, height))
-        image.blit(self.spritesheet, (0, 0), (x, y, width, height))
+        image.blit(self.spritesheet, (0, 0
+                                      ), (x, y, width, height))
         new_image = pg.transform.scale(image, (width, height))
         image = new_image
         return image
@@ -116,10 +117,16 @@ class Water:
         self.start_time = pg.time.get_ticks()
         self.color = (40, 120, 220, 90)
         self.wave_color = (190, 220, 255, 150)
-        self.touching = False
+
+    def spawn_splash(self, game, center_x):
+        for _ in range(150):
+            angle = random.uniform(0.15, math.pi - 0.15)
+            radius = random.uniform(8, 40)
+            spawn_x = center_x + math.cos(angle) * radius
+            spawn_y = self.water_top - math.sin(angle) * radius
+            Water_particle(game, spawn_x, spawn_y)
 
     def update(self, dt, game): 
-        hit = False # hit variable for water check
         # Starting delay of water rising for time to go upwards before water gets there
 
         if pg.time.get_ticks() - self.start_time >= self.delay_ms: #Check for delay to start rising
@@ -128,28 +135,36 @@ class Water:
         # Water Top is used for checking if player is touching the water by using the top cords of the current hieght of the rising water
         self.water_top = self.world_height - self.height
 
-        if hasattr(game, "player"): # checks if player exists before checking for water collision(I think i had issues where hte player would spaw after so i found out this might help)
-            if game.player.rect.bottom >= self.water_top: # checks if player is touching the water
-                hit = True
-
-        if hasattr(game, "player2"): # checks if player2 exists before checking for water collision(I think i had issues where hte player would spaw after so i found out this might help)
-            if game.player2.rect.bottom >= self.water_top: # checks if player2 is touching the water
-                hit = True
-        if hit and not self.touching: # The player laying in water check, for playing sound 
+        # Player 1 Particles and Sound
+        player1_touching = self.is_touching(game.player)
+        if player1_touching and not game.player.was_touching_water:
             if settings.splash_sound: # checks for splash sound in setting before playing
                 settings.splash_sound.play()  # plays the splash sound when the player enters the water
-            print("hit")
-        self.touching = hit 
+
+            self.spawn_splash(game, game.player.hit_rect.centerx)
+        game.player.was_touching_water = player1_touching
+
+
+
+        # Player 2 Particles and Sound
+        player2_touching = self.is_touching(game.player2)
+        if player2_touching and not game.player2.was_touching_water:
+            if settings.splash_sound: # checks for splash sound in setting before playing
+                settings.splash_sound.play()  # plays the splash sound when the player enters the water
+
+            self.spawn_splash(game, game.player2.hit_rect.centerx) 
+        game.player2.was_touching_water = player2_touching
+
+        if player1_touching or player2_touching:
+            game.health -= WATER_DAMAGE * dt
         return self.water_top
+    
 
     def is_touching(self, sprite, water_top=None): # methond to check for touching
         # Simple check: if the player's feet are below the water line, they are in water.
         if water_top is None:
             water_top = self.water_top
-
-        if hasattr(sprite, "hit_rect"): # 
-            return sprite.hit_rect.bottom >= water_top
-        return sprite.rect.bottom >= water_top
+        return sprite.hit_rect.bottom >= water_top
 
     def surface_y(self):
         return self.water_top # returns the y cord of top of water
@@ -179,3 +194,18 @@ class Water:
             pg.draw.lines(water_surface, self.wave_color, False, points, 2)
 
         surface.blit(water_surface, (0, 0)) # draws the water surface on the main screen
+
+class health_bar:
+    def __init__(self, player):
+        self.player = player
+        self.width = 100
+        self.height = 12
+        self.color = (255, 0, 0)
+
+    def draw(self, surface, x, y):
+        health_ratio = self.player.health / self.player.max_health
+        current_width = int(self.width * health_ratio)
+        back_rect = pg.Rect(x, y, self.width, self.height)
+        health_rect = pg.Rect(x, y, current_width, self.height)
+        pg.draw.rect(surface, WHITE, back_rect, 2)
+        pg.draw.rect(surface, self.color, health_rect)
