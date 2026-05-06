@@ -8,13 +8,14 @@ import pygame as pg
 from os import path
 import settings
 from settings import *
-from sprites import *
+from sprites import *  # Ensure Camera is imported
 from utils import *
 
 
 class Game:
     def __init__(self):
         pg.init()
+        pg.font.init()
 
         self.screen = pg.display.set_mode((WIDTH, HEIGHT))
         pg.display.set_caption(TITLE)
@@ -70,18 +71,19 @@ class Game:
             self.map = [line.rstrip('\n') for line in f]
 
 
-        self.camera = Camera(len(self.map[0]) * TILESIZE, len(self.map) * TILESIZE)
+        self.camera = Camera(len(self.map[0]) * TILESIZE, len(self.map) * TILESIZE)  # Camera must be defined in sprites.py
         print('data is loaded')
 
     def new(self): # Start a new game
+        self.playing = True
         self.load_data() # loads all data first of images and sounds and map 
         #loading sprites
         self.all_sprites = pg.sprite.Group() 
         self.all_walls = pg.sprite.Group()
         self.confetti = []
-        self.max_health = MAX_HEALTH
-        self.health = self.max_health
         self.dead_printed = False
+        self.health = Health(self)
+        self.health.reset()
 
         self.water = Water(self.camera.width, self.camera.height)
 
@@ -91,13 +93,14 @@ class Game:
                     Wall(self, col, row)
                 if tile == 'P':
                     self.player = Player(self, col, row)
+                    self.player1_spawn_pos = vec(col * TILESIZE, row * TILESIZE)
                 if tile == 'M':
                     self.player2 = Player2(self, col, row)
-        self.health_bar = health_bar(self)
+                    self.player2_spawn_pos = vec(col * TILESIZE, row * TILESIZE)
         self.run()
 
     def run(self):
-        while self.running:
+        while self.running and self.playing:
             self.dt = self.clock.tick(FPS) / 1000
             self.events()
             self.update()
@@ -105,10 +108,13 @@ class Game:
 
     def events(self):
         for event in pg.event.get():
+            
             if event.type == pg.QUIT:
                 if self.playing:
                     self.playing = False
                 self.running = False
+            if self.health.can_restart() and event.type == pg.KEYDOWN:
+                 self.playing = False
 
 
     def quit(self):
@@ -116,11 +122,10 @@ class Game:
 
     def update(self):
         self.water.update(self.dt, self)
-        if self.health < 0:
-            self.health = 0
-        if self.health == 0 and not self.dead_printed:
-            print("dead")
+        if self.health.is_dead() and not self.dead_printed:
+            print("died")
             self.dead_printed = True
+            
         self.all_sprites.update()
         if hasattr(self, 'player'): # Only update camera if player exists
             self.camera.update(self.player) # Update camera to follow player
@@ -137,7 +142,7 @@ class Game:
         if hasattr(self, 'player'): 
             self.camera.apply_circular_mask(self.screen, self.player)
             self.draw_text("P1: WASD/W   P2: Arrow Keys", 24, WHITE, WIDTH / 2, 15) # Controlls text on screen
-            self.health_bar.draw(self.screen, 20, 50)
+            self.health.draw(self.screen, 20, 50)
 
         pg.display.flip()
 

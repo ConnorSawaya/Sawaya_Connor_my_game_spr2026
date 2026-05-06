@@ -1,4 +1,5 @@
 import math
+import random
 import pygame as pg
 from pygame.sprite import Sprite
 from settings import *
@@ -156,7 +157,7 @@ class Water:
         game.player2.was_touching_water = player2_touching
 
         if player1_touching or player2_touching:
-            game.health -= WATER_DAMAGE * dt
+            game.health.damage(WATER_DAMAGE * dt)
         return self.water_top
     
 
@@ -195,17 +196,62 @@ class Water:
 
         surface.blit(water_surface, (0, 0)) # draws the water surface on the main screen
 
-class health_bar:
-    def __init__(self, player):
-        self.player = player
+class Health:
+    def __init__(self, game):
+        self.game = game
+        self.max_health = MAX_HEALTH
+        self.current = self.max_health
+        self.death_time = None
+        self.restart_delay = 3000
         self.width = 100
         self.height = 12
         self.color = (255, 0, 0)
 
+    def reset(self):
+        self.current = self.max_health # reset health to max health, used for restarting the game
+        self.death_time = None
+
+    def damage(self, amount): # Damage function 
+        self.current = max(0, self.current - amount)
+        if self.is_dead() and self.death_time is None:
+            self.death_time = pg.time.get_ticks()
+
+    def is_dead(self):
+        return self.current <= 0 # Check if health is 0 or below to determine if player is dead
+
+    def can_restart(self):
+        if not self.is_dead() or self.death_time is None:
+            return False
+        return pg.time.get_ticks() - self.death_time >= self.restart_delay
+
     def draw(self, surface, x, y):
-        health_ratio = self.player.health / self.player.max_health
-        current_width = int(self.width * health_ratio)
-        back_rect = pg.Rect(x, y, self.width, self.height)
-        health_rect = pg.Rect(x, y, current_width, self.height)
-        pg.draw.rect(surface, WHITE, back_rect, 2)
-        pg.draw.rect(surface, self.color, health_rect)
+        health_ratio = self.current / self.max_health # calculate health ratio for how much should be filled
+        current_width = int(self.width * health_ratio) # calcualte current width of the health bar based on health ratio
+
+        health_bar_font = pg.font.SysFont("copperplategothic", 18, bold=True) # font 
+        health_amount_font = pg.font.SysFont("copperplategothic", 14, bold=True) # font for health amount text
+
+        health_text = health_bar_font.render("Health", True, WHITE)
+        health_amount_text = health_amount_font.render(f"{int(self.current)} / {self.max_health}", True, WHITE)
+
+        surface.blit(health_text, health_text.get_rect(center=(x + self.width / 2, y - 10))) # draws health bar above the actual bar
+        surface.blit(health_amount_text, health_amount_text.get_rect(center=(x + self.width / 2, y + self.height + 15))) # draws health amount below the health bar
+
+        pg.draw.rect(surface, WHITE, (x, y, self.width, self.height), 2)
+        pg.draw.rect(surface, self.color, (x, y, current_width, self.height))
+
+        if self.is_dead():
+            game_over_font = pg.font.SysFont("copperplategothic", 64, bold=True)
+            game_over_text = game_over_font.render("Game Over", True, RED)
+            restart_font = pg.font.SysFont("copperplategothic", 28, bold=True)
+            if self.can_restart():
+                restart_message = "Press any key to Restart"
+                restart_color = RED
+            else:
+                restart_message = "Respawning in 3 seconds..."
+                restart_color = GREEN
+            restart_text = restart_font.render(restart_message, True, restart_color)
+            surface.blit(game_over_text, game_over_text.get_rect(center=(WIDTH / 2, HEIGHT / 2)))
+            surface.blit(restart_text, restart_text.get_rect(center=(WIDTH / 2, HEIGHT / 2 + 60)))
+           
+            
