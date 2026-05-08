@@ -130,8 +130,16 @@ class Player(Sprite):
             self.standing_frames = [self.image]
             self.moving_frames = [self.image]
 
-    def get_keys(self):
-        keys = pg.key.get_pressed()
+    def dead(self): 
+        return hasattr(self.game, "health") and self.game.health.is_dead()
+
+    def get_keys(self): # Checks for Key presses 
+        keys = pg.key.get_pressed() # Key Press checking
+        if self.dead(): # if player is dead, set velocity to 0 and return so player cant move
+            self.vel.x = 0
+            self.moving = False
+            return  
+
         in_water = hasattr(self.game, "water") and self.game.water.is_touching(self)
         move_speed = PLAYER_SPEED * 0.55 if in_water else PLAYER_SPEED
 
@@ -255,8 +263,15 @@ class Player2(Sprite): # another player that is controlled by the player
         self.on_ground = False
         self.was_touching_water = False
 
+    def dead(self):
+        return hasattr(self.game, "health") and self.game.health.is_dead()
+
     def get_keys(self): # Checks key input 
         keys = pg.key.get_pressed()
+        if self.dead():
+            self.vel.x = 0
+            return
+
         in_water = hasattr(self.game, "water") and self.game.water.is_touching(self)
         move_speed = PLAYER_SPEED * 0.55 if in_water else PLAYER_SPEED
 

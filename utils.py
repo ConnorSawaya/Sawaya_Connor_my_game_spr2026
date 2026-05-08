@@ -239,7 +239,7 @@ class Health:
 
         pg.draw.rect(surface, WHITE, (x, y, self.width, self.height), 2)
         pg.draw.rect(surface, self.color, (x, y, current_width, self.height))
-
+        
         if self.is_dead():
             game_over_font = pg.font.SysFont("copperplategothic", 64, bold=True)
             game_over_text = game_over_font.render("Game Over", True, RED)
