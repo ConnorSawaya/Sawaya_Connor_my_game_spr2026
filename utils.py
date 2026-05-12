@@ -196,7 +196,7 @@ class Water:
 
         surface.blit(water_surface, (0, 0)) # draws the water surface on the main screen
 
-class Health:
+class Health: # Health class and health bar
     def __init__(self, game):
         self.game = game
         self.max_health = MAX_HEALTH
@@ -207,30 +207,34 @@ class Health:
         self.height = 12
         self.color = (255, 0, 0)
 
-    def reset(self):
+    def reset(self): # resets health stats
         self.current = self.max_health # reset health to max health, used for restarting the game
         self.death_time = None
 
-    def damage(self, amount): # Damage function 
+    def damage(self, amount): # Damage function using for damage over time
         self.current = max(0, self.current - amount)
         if self.is_dead() and self.death_time is None:
             self.death_time = pg.time.get_ticks()
 
-    def is_dead(self):
+    def is_dead(self): # Checks if your dead
         return self.current <= 0 # Check if health is 0 or below to determine if player is dead
 
-    def can_restart(self):
+    def can_restart(self): # Check if you can restart based on the 3 seconds needed to wait after death before restarting,
         if not self.is_dead() or self.death_time is None:
             return False
         return pg.time.get_ticks() - self.death_time >= self.restart_delay
 
-    def draw(self, surface, x, y):
+    def draw(self, surface, x, y): # Draw health bar + Text + Game Over and Restart Text when dead
         health_ratio = self.current / self.max_health # calculate health ratio for how much should be filled
         current_width = int(self.width * health_ratio) # calcualte current width of the health bar based on health ratio
 
+        # Fonts 
         health_bar_font = pg.font.SysFont("copperplategothic", 18, bold=True) # font 
         health_amount_font = pg.font.SysFont("copperplategothic", 14, bold=True) # font for health amount text
+        game_over_font = pg.font.SysFont("copperplategothic", 64, bold=True)
+        restart_font = pg.font.SysFont("copperplategothic", 28, bold=True)
 
+        # Texts for health bar
         health_text = health_bar_font.render("Health", True, WHITE)
         health_amount_text = health_amount_font.render(f"{int(self.current)} / {self.max_health}", True, WHITE)
 
@@ -240,17 +244,17 @@ class Health:
         pg.draw.rect(surface, WHITE, (x, y, self.width, self.height), 2)
         pg.draw.rect(surface, self.color, (x, y, current_width, self.height))
         
-        if self.is_dead():
-            game_over_font = pg.font.SysFont("copperplategothic", 64, bold=True)
+        if self.is_dead(): # When the player is dead(game over text, restart checker, and restart text)
+            
             game_over_text = game_over_font.render("Game Over", True, RED)
-            restart_font = pg.font.SysFont("copperplategothic", 28, bold=True)
+            
             if self.can_restart():
                 restart_message = "Press any key to Restart"
                 restart_color = RED
             else:
-                restart_message = "Respawning in 3 seconds..."
+                restart_message = ""
                 restart_color = GREEN
-            restart_text = restart_font.render(restart_message, True, restart_color)
+            restart_text = restart_font.render(restart_message, True, restart_color) 
             surface.blit(game_over_text, game_over_text.get_rect(center=(WIDTH / 2, HEIGHT / 2)))
             surface.blit(restart_text, restart_text.get_rect(center=(WIDTH / 2, HEIGHT / 2 + 60)))
            

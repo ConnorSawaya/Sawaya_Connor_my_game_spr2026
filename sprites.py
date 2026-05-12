@@ -138,7 +138,7 @@ class Player(Sprite):
         if self.dead(): # if player is dead, set velocity to 0 and return so player cant move
             self.vel.x = 0
             self.moving = False
-            return  
+            return
 
         in_water = hasattr(self.game, "water") and self.game.water.is_touching(self)
         move_speed = PLAYER_SPEED * 0.55 if in_water else PLAYER_SPEED
