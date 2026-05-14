@@ -98,6 +98,12 @@ def apply_vertical_physics(sprite):
         sprite.vel.y = MAX_FALL_SPEED
 
 
+def clamp_vertical_move(sprite):
+    # Limit vertical movement per frame so player doesnt fall through the floor if they move fast
+    max_move = TILESIZE - 1 
+    return max(-max_move, min(sprite.vel.y * sprite.game.dt, max_move)) # limits movement to max_move in either direction
+
+
 class Player(Sprite):
     def __init__(self, game, x, y, controls=None, color=WHITE):
         self.groups = game.all_sprites
@@ -231,7 +237,7 @@ class Player(Sprite):
         # Apply vertical movement and check for collisions
         self.on_ground = False # Assume player is in the air until we check for collisions
         was_falling = self.vel.y > 0 # checks for falling player
-        self.pos.y += self.vel.y * self.game.dt # moves player vertically
+        self.pos.y += clamp_vertical_move(self) # move player vertically with clamping to prevent falling through floors
         self.hit_rect.centery = self.pos.y # Update hit rect for vertical movement
         collide_with_walls(self, self.game.all_walls, 'y')
         collide_with_player(self, self.game.player2, 'y')
@@ -308,15 +314,13 @@ class Player2(Sprite): # another player that is controlled by the player
         # Applys Slingshot Force
         self.on_ground = False # Assume player is in the air until we check for collisions
         was_falling = self.vel.y > 0 # checks for falling player
-        self.pos.y += self.vel.y * self.game.dt # moves player vertically
-        self.hit_rect.centery = self.pos.y # Update hit rect for vertical movement
-
-        # Check for vertical collisions with walls and player
+        self.pos.y += clamp_vertical_move(self) # move player vertically with clamping to prevent falling through floors
+        self.hit_rect.centery = self.pos.y # Update hit rect for vertical movement 
         collide_with_walls(self, self.game.all_walls, 'y')
         collide_with_player(self, self.game.player, 'y')
+
+
         self.pos.y = self.hit_rect.centery
-
-
         if was_falling and self.vel.y == 0: # checks for landing player
             self.on_ground = True
 
@@ -340,6 +344,21 @@ class Wall(Sprite): # wall class
 
     def update(self):
         pass
+
+
+class FakePlatform(Sprite): # Fake platforms that arent solid so the player falls through them
+    def __init__(self, game, x, y):
+        self.groups = game.all_sprites
+        Sprite.__init__(self, self.groups)
+        self.game = game
+        self.image = pg.Surface((TILESIZE, TILESIZE))
+        wall_path = path.join(self.game.img_dir, 'wall.png')
+        if not path.exists(wall_path):
+            wall_path = path.join(self.game.img_dir, 'Wall.png')
+        self.image = pg.image.load(wall_path).convert()
+        self.rect = self.image.get_rect()
+        self.pos = tile_center(x, y)
+        self.rect.center = self.pos
 
 
 class Confetti(Sprite): # Confetti class for when player wins       

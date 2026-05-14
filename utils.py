@@ -118,6 +118,7 @@ class Water:
         self.start_time = pg.time.get_ticks()
         self.color = (40, 120, 220, 90)
         self.wave_color = (190, 220, 255, 150)
+        self.wave_time = 0
 
     def spawn_splash(self, game, center_x):
         for _ in range(150):
@@ -129,9 +130,18 @@ class Water:
 
     def update(self, dt, game): 
         # Starting delay of water rising for time to go upwards before water gets there
+        self.wave_time += dt
 
         if pg.time.get_ticks() - self.start_time >= self.delay_ms: #Check for delay to start rising
-            self.height = min(self.world_height, self.height + self.rise_speed * dt)
+
+            highest_player_y = min(game.player.hit_rect.top, game.player2.hit_rect.top) # Gets highest pos player y to calculate the speed of rising wave
+            distance_above_water = self.water_top - highest_player_y
+            catchup_speed = 0 # if the player is much higher than the water it will rise faster to catch up to them.
+
+            if distance_above_water > TILESIZE * 6: # if player is more than 6 tiles above water -> increase catchup speed.
+                catchup_speed = self.rise_speed * min(2.5, distance_above_water / (TILESIZE * 8)) # max catchup speed is 2.5 times normal rise speed
+
+            self.height = min(self.world_height, self.height + (self.rise_speed + catchup_speed) * dt) # increase the height of the water based on rise speed and the catchup speed
 
         # Water Top is used for checking if player is touching the water by using the top cords of the current hieght of the rising water
         self.water_top = self.world_height - self.height
@@ -186,7 +196,7 @@ class Water:
 
         for x in range(0, self.world_width + 1, 20): # Sample points every 20 pixels across the width of the water
             # calculate the wave height using sine function 
-            wave_y = water_top + math.sin(pg.time.get_ticks() * 0.004 + x * 0.03) * 4
+            wave_y = water_top + math.sin(self.wave_time * 4 + x * 0.03) * 4 # sine wave that changes over time
             screen_x = x + camera.camera.x 
             screen_y = wave_y + camera.camera.y 
             points.append((screen_x, screen_y))

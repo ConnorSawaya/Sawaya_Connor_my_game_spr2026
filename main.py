@@ -22,6 +22,7 @@ class Game:
         self.clock = pg.time.Clock()
         self.running = True
         self.playing = True
+        self.paused = False
 
     def load_data(self):
         self.game_dir = path.dirname(__file__)
@@ -76,6 +77,7 @@ class Game:
 
     def new(self): # Start a new game
         self.playing = True
+        self.paused = False
         self.load_data() # loads all data first of images and sounds and map 
         #loading sprites
         self.all_sprites = pg.sprite.Group() 
@@ -91,19 +93,21 @@ class Game:
             for col, tile in enumerate(tiles):
                 if tile == '1':
                     Wall(self, col, row)
+                if tile == 'F': # fall through platforms
+                    FakePlatform(self, col, row)
                 if tile == 'P':
                     self.player = Player(self, col, row)
-                    self.player1_spawn_pos = vec(col * TILESIZE, row * TILESIZE)
                 if tile == 'M':
                     self.player2 = Player2(self, col, row)
-                    self.player2_spawn_pos = vec(col * TILESIZE, row * TILESIZE)
         self.run()
 
     def run(self):
         while self.running and self.playing:
             self.dt = self.clock.tick(FPS) / 1000
             self.events()
-            self.update()
+
+            if not self.paused: # Update and draw if not paused
+                self.update() 
             self.draw()
 
     def events(self):
@@ -113,7 +117,10 @@ class Game:
                 if self.playing:
                     self.playing = False
                 self.running = False
-            if self.health.can_restart() and event.type == pg.KEYDOWN:
+                # Paused toggle check
+            if event.type == pg.KEYDOWN and event.key == pg.K_p and not self.health.is_dead():
+                self.paused = not self.paused
+            if self.health.can_restart() and event.type == pg.KEYDOWN and event.key != pg.K_p:
                  self.playing = False
 
 
@@ -143,6 +150,8 @@ class Game:
             self.camera.apply_circular_mask(self.screen, self.player)
             self.draw_text("P1: WASD/W   P2: Arrow Keys", 24, WHITE, WIDTH / 2, 15) # Controlls text on screen
             self.health.draw(self.screen, 20, 50)
+        if self.paused: # paused text
+            self.draw_text("Paused", 48, WHITE, WIDTH / 2, HEIGHT / 2)
 
         pg.display.flip()
 
