@@ -120,7 +120,7 @@ class Water:
         self.wave_color = (190, 220, 255, 150)
         self.wave_time = 0
 
-    def spawn_splash(self, game, center_x):
+    def spawn_splash(self, game, center_x):# For when a player hits the water display particles + sound
         for _ in range(150):
             angle = random.uniform(0.15, math.pi - 0.15)
             radius = random.uniform(8, 40)
@@ -136,6 +136,7 @@ class Water:
 
             highest_player_y = min(game.player.hit_rect.top, game.player2.hit_rect.top) # Gets highest pos player y to calculate the speed of rising wave
             distance_above_water = self.water_top - highest_player_y
+            
             catchup_speed = 0 # if the player is much higher than the water it will rise faster to catch up to them.
 
             if distance_above_water > TILESIZE * 6: # if player is more than 6 tiles above water -> increase catchup speed.

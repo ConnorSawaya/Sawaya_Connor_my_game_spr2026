@@ -2,6 +2,8 @@
 
 """
 Sprite Sheet llama made By CaptainBrosset
+Codex for the Wave made by ChatGPT
+Some parts are asked by chatgpt but mostly it was for debugging and code that had been removing
 """
 
 import pygame as pg
