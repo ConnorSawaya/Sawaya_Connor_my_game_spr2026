@@ -22,9 +22,14 @@ jobs:
           python-version: "3.11"
       - name: Install Pygbag
         run: python -m pip install pygbag==0.9.3
+      - name: Test generated HTML repair
+        run: python -m unittest discover -s tests -v
       # Pages serves this artifact at /<repository>/; Pygbag's generated APK URL is relative.
       - name: Package the Pygame app for the Pages subpath
         run: python -m pygbag --build --title "The Best Game Evahh" --ume_block 0 .
+      # Pygbag 0.9.3 still emits this dead tag; upstream removed BrowserFS.
+      - name: Remove obsolete BrowserFS loader from generated page
+        run: python scripts/remove_removed_browserfs.py build/web/index.html
       - name: Add Pages marker
         run: touch build/web/.nojekyll
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
