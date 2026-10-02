@@ -1,4 +1,5 @@
 import os
+import sys
 import pygame as pg
 
 STRING_DISTANCE = 180    # Rest length of elastic string (slack below this)
@@ -36,6 +37,7 @@ WATER_DAMAGE = 20
 script_dir = os.path.dirname(__file__)  # File path of the current script
 IMG_DIR = os.path.join(script_dir, "images") # File path of the images folder
 SOUND_DIR = os.path.join(script_dir, "sounds") # File path of the sounds folder
+SOUND_EXTENSION = "ogg" if sys.platform == "emscripten" else "wav"
 
 
 
