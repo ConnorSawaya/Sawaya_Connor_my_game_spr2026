@@ -6,6 +6,8 @@ Codex for the Wave made by ChatGPT
 Some parts are asked by chatgpt but mostly it was for debugging and code that had been removing
 """
 
+import asyncio
+
 import pygame as pg
 from os import path
 import settings
@@ -34,19 +36,19 @@ class Game:
         try: # jump sound loading
             if not pg.mixer.get_init():
                 pg.mixer.init()
-            settings.jump_sound = pg.mixer.Sound(path.join(SOUND_DIR, "jump.wav"))
+            settings.jump_sound = pg.mixer.Sound(path.join(SOUND_DIR, f"jump.{SOUND_EXTENSION}"))
         except pg.error: # if theres a error loading in sound will set it to none so it wont crash
             settings.jump_sound = None
         try: # splash sound loading
             if not pg.mixer.get_init():
                 pg.mixer.init()
-            settings.splash_sound = pg.mixer.Sound(path.join(SOUND_DIR, "water_splash.wav"))
+            settings.splash_sound = pg.mixer.Sound(path.join(SOUND_DIR, f"water_splash.{SOUND_EXTENSION}"))
         except pg.error:# if theres a error loading in sound will set it to none so it wont crash
             settings.splash_sound = None
         try: # congrats sound loading
             if not pg.mixer.get_init():
                 pg.mixer.init()
-            settings.congrats_sound = pg.mixer.Sound(path.join(SOUND_DIR, "congrats.wav"))
+            settings.congrats_sound = pg.mixer.Sound(path.join(SOUND_DIR, f"congrats.{SOUND_EXTENSION}"))
         except pg.error: # if theres a error loading in sound will set it to none so it wont crash
             settings.congrats_sound = None
         ###################---Sound Loading---###################
@@ -77,7 +79,7 @@ class Game:
         self.camera = Camera(len(self.map[0]) * TILESIZE, len(self.map) * TILESIZE)  # Camera must be defined in sprites.py
         print('data is loaded')
 
-    def new(self): # Start a new game
+    async def new(self): # Start a new game
         self.playing = True
         self.paused = False
         self.load_data() # loads all data first of images and sounds and map 
@@ -101,9 +103,9 @@ class Game:
                     self.player = Player(self, col, row)
                 if tile == 'M':
                     self.player2 = Player2(self, col, row)
-        self.run()
+        await self.run()
 
-    def run(self):
+    async def run(self):
         while self.running and self.playing:
             self.dt = self.clock.tick(FPS) / 1000
             self.events()
@@ -111,6 +113,9 @@ class Game:
             if not self.paused: # Update and draw if not paused
                 self.update() 
             self.draw()
+
+            # Let the browser event loop process input and render the next frame.
+            await asyncio.sleep(0)
 
     def events(self):
         for event in pg.event.get():
@@ -166,10 +171,12 @@ class Game:
         self.screen.blit(text_surface, text_rect)
 
 
+async def main():
+    game = Game()
+    while game.running:
+        await game.new()
+    pg.quit()
+
+
 if __name__ == "__main__":
-    g = Game()
-
-    while g.running:
-        g.new()
-
-pg.quit()
+    asyncio.run(main())
